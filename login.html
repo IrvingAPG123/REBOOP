@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REBOOP - Ecosistema de Reciclaje Tecnológico</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body{
+            background:#0f172a;
+            color:white;
+            overflow-x:hidden;
+        }
+
+        /* ========================= */
+        /* HEADER */
+        /* ========================= */
+
+        header{
+            width:100%;
+            padding:20px 8%;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            position:fixed;
+            top:0;
+            z-index:1000;
+            background:rgba(15,23,42,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+
+        .logo{
+            font-size:28px;
+            font-weight:bold;
+            color:#22c55e;
+        }
+
+        .menu{
+            display:flex;
+            gap:15px;
+        }
+
+        .menu button{
+            padding:10px 20px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:bold;
+            transition:0.3s;
+        }
+
+        .btn-login-top{
+            background:#22c55e;
+            color:white;
+        }
+
+        .btn-register-top{
+            background:transparent;
+            border:2px solid #22c55e !important;
+            color:#22c55e;
+        }
+
+        .menu button:hover{
+            transform:translateY(-2px);
+        }
+
+        /* ========================= */
+        /* HERO */
+        /* ========================= */
+
+        .hero{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:120px 8% 50px;
+            gap:50px;
+            flex-wrap:wrap;
+        }
+
+        .hero-text{
+            flex:1;
+            min-width:300px;
+        }
+
+        .hero-text h1{
+            font-size:60px;
+            margin-bottom:20px;
+            color:#22c55e;
+        }
+
+        .hero-text p{
+            font-size:18px;
+            line-height:1.8;
+            color:#d1d5db;
+            margin-bottom:25px;
+        }
+
+        .hero-text .info-boxes{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:20px;
+            margin-top:30px;
+        }
+
+        .info-card{
+            background:rgba(255,255,255,0.05);
+            padding:20px;
+            border-radius:15px;
+            border:1px solid rgba(255,255,255,0.08);
+        }
+
+        .info-card h3{
+            color:#22c55e;
+            margin-bottom:10px;
+        }
+
+        /* ========================= */
+        /* PANEL DERECHO */
+        /* ========================= */
+
+        .panel-auth{
+            width:420px;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:20px;
+            padding:35px;
+            backdrop-filter: blur(10px);
+            box-shadow:0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .tabs{
+            display:flex;
+            margin-bottom:30px;
+            background:#111827;
+            border-radius:12px;
+            overflow:hidden;
+        }
+
+        .tab-btn{
+            flex:1;
+            padding:15px;
+            border:none;
+            cursor:pointer;
+            background:transparent;
+            color:white;
+            font-weight:bold;
+            transition:0.3s;
+        }
+
+        .tab-active{
+            background:#22c55e;
+        }
+
+        .auth-form{
+            display:none;
+        }
+
+        .auth-form.active{
+            display:block;
+        }
+
+        .input-group{
+            margin-bottom:20px;
+        }
+
+        .input-group label{
+            display:block;
+            margin-bottom:8px;
+            font-size:14px;
+        }
+
+        .input-group input{
+            width:100%;
+            padding:14px;
+            border:none;
+            border-radius:10px;
+            outline:none;
+            background:#1e293b;
+            color:white;
+        }
+
+        .password-wrapper{
+            position:relative;
+        }
+
+        .toggle-password{
+            position:absolute;
+            right:15px;
+            top:50%;
+            transform:translateY(-50%);
+            cursor:pointer;
+            color:#9ca3af;
+        }
+
+        .btn-submit{
+            width:100%;
+            padding:14px;
+            border:none;
+            border-radius:10px;
+            background:#22c55e;
+            color:white;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .btn-submit:hover{
+            background:#16a34a;
+        }
+
+        /* ========================= */
+        /* ALERTAS */
+        /* ========================= */
+
+        .alerta-oculta {
+            display: none;
+        }
+
+        .alerta-visible {
+            display: block;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .exito {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        /* ========================= */
+        /* RESPONSIVE */
+        /* ========================= */
+
+        @media(max-width:900px){
+
+            .hero-text h1{
+                font-size:40px;
+            }
+
+            .panel-auth{
+                width:100%;
+            }
+
+            header{
+                padding:20px;
+            }
+
+            .hero{
+                padding:120px 20px 40px;
+            }
+
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">REBOOP</div>
+
+        <div class="menu">
+            <button class="btn-register-top" onclick="mostrarRegistro()">
+                Registrarse
+            </button>
+
+            <button class="btn-login-top" onclick="mostrarLogin()">
+                Iniciar Sesión
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <section class="hero">
+
+        <!-- IZQUIERDA -->
+        <div class="hero-text">
+
+            <h1>REBOOP</h1>
+
+            <p>
+                Plataforma tecnológica enfocada en el reciclaje y reutilización
+                de residuos electrónicos en la Región Norte de Veracruz.
+            </p>
+
+            <p>
+                Nuestro objetivo es conectar a personas, empresas y centros de
+                reciclaje para reducir el impacto ambiental generado por los
+                dispositivos electrónicos en desuso.
+            </p>
+
+            <div class="info-boxes">
+
+                <div class="info-card">
+                    <h3>¿Quiénes Somos?</h3>
+                    <p>
+                        Somos una plataforma enfocada en la gestión inteligente
+                        de residuos tecnológicos.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Misión</h3>
+                    <p>
+                        Promover una cultura de reciclaje tecnológico accesible,
+                        segura y sustentable.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Visión</h3>
+                    <p>
+                        Convertirnos en el principal ecosistema digital de
+                        reciclaje tecnológico en Veracruz.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Impacto</h3>
+                    <p>
+                        Ayudamos a disminuir la contaminación causada por
+                        residuos electrónicos.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DERECHA -->
+        <div class="panel-auth">
+
+            <div id="alerta-custom" class="alerta-oculta">
+                <span id="alerta-mensaje"></span>
+            </div>
+
+            <!-- TABS -->
+            <div class="tabs">
+                <button id="btnTabLogin" class="tab-btn tab-active">
+                    Iniciar Sesión
+                </button>
+
+                <button id="btnTabRegistro" class="tab-btn">
+                    Registrarse
+                </button>
+            </div>
+
+            <!-- LOGIN -->
+            <form class="auth-form active" id="form-login" autocomplete="off">
+
+                <div class="input-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="email" placeholder="ejemplo@gmail.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Contraseña</label>
+
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Ingresa tu contraseña" required>
+
+                        <span id="btn-toggle-pwd"
+                              class="material-icons toggle-password">
+                            visibility_off
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="btn-submit"
+                        id="btn-submit">
+                    Ingresar al Sistema
+                </button>
+
+            </form>
+
+            <!-- REGISTRO -->
+            <div class="auth-form" id="form-registro">
+
+                <h2 style="margin-bottom:20px;">
+                    Crear Cuenta
+                </h2>
+
+                <p style="color:#cbd5e1; line-height:1.6;">
+                    Para registrarte en REBOOP presiona el botón inferior.
+                </p>
+
+                <button class="btn-submit"
+                        style="margin-top:25px;"
+                        onclick="window.location.href='registro.html'">
+                    Ir al Registro
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <script>
+
+        // =========================
+        // CAMBIO DE PESTAÑAS
+        // =========================
+
+        const btnTabLogin = document.getElementById('btnTabLogin');
+        const btnTabRegistro = document.getElementById('btnTabRegistro');
+
+        const formLoginVisual = document.getElementById('form-login');
+        const formRegistroVisual = document.getElementById('form-registro');
+
+        function mostrarLogin(){
+
+            formLoginVisual.classList.add('active');
+            formRegistroVisual.classList.remove('active');
+
+            btnTabLogin.classList.add('tab-active');
+            btnTabRegistro.classList.remove('tab-active');
+
+        }
+
+        function mostrarRegistro(){
+
+            formRegistroVisual.classList.add('active');
+            formLoginVisual.classList.remove('active');
+
+            btnTabRegistro.classList.add('tab-active');
+            btnTabLogin.classList.remove('tab-active');
+
+        }
+
+        btnTabLogin.addEventListener('click', mostrarLogin);
+        btnTabRegistro.addEventListener('click', mostrarRegistro);
+
+        // =========================
+        // LOGIN ORIGINAL
+        // =========================
+
+        const pwdInput      = document.getElementById('password');
+        const btnToggle     = document.getElementById('btn-toggle-pwd');
+        const alertaCustom  = document.getElementById('alerta-custom');
+        const alertaMensaje = document.getElementById('alerta-mensaje');
+
+        btnToggle.addEventListener('click', () => {
+
+            const isPassword = pwdInput.type === 'password';
+
+            pwdInput.type = isPassword ? 'text' : 'password';
+
+            btnToggle.textContent =
+                isPassword ? 'visibility' : 'visibility_off';
+
+        });
+
+        function mostrarAlerta(msg, tipo) {
+
+            alertaMensaje.textContent = msg;
+
+            alertaCustom.className = `alerta-visible ${tipo}`;
+
+            setTimeout(() => {
+
+                alertaCustom.className = 'alerta-oculta';
+
+            }, 4000);
+
+        }
+
+        formLoginVisual.addEventListener('submit', async (e) => {
+
+            e.preventDefault();
+
+            const btnSubmit =
+                document.getElementById('btn-submit');
+
+            const correo =
+                document.getElementById('email').value.trim();
+
+            const password =
+                pwdInput.value.trim();
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "Verificando...";
+
+            try {
+
+                const respuesta = await fetch('/api/login', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        correo,
+                        password
+                    })
+
+                });
+
+                const resultado = await respuesta.json();
+
+                if (respuesta.ok) {
+
+                    mostrarAlerta(
+                        "Acceso correcto. Redirigiendo...",
+                        "exito"
+                    );
+
+                    localStorage.clear();
+
+                    localStorage.setItem('user_nombre', resultado.nombre);
+                    localStorage.setItem('user_apellido', resultado.apellido);
+                    localStorage.setItem('user_correo', resultado.correo);
+                    localStorage.setItem('user_telefono', resultado.telefono);
+                    localStorage.setItem('user_ciudad', resultado.ciudad);
+                    localStorage.setItem('user_fecha', resultado.fechaNacimiento);
+                    localStorage.setItem('user_rol', resultado.rol);
+                    localStorage.setItem('user_foto', resultado.fotoPerfil || '');
+                    localStorage.setItem('user_presentacion', resultado.presentacion || '');
+
+                    setTimeout(() => {
+
+                        window.location.href =
+                            resultado.rol === 'administrador'
+                            ? 'panel_admin.html'
+                            : 'panel_cliente.html';
+
+                    }, 1000);
+
+                } else {
+
+                    if (resultado.requiereConfirmacion) {
+
+                        localStorage.setItem(
+                            'correo_verificacion',
+                            resultado.correo
+                        );
+
+                        mostrarAlerta(
+                            "Tu cuenta requiere verificación.",
+                            "error"
+                        );
+
+                        setTimeout(() => {
+
+                            window.location.href =
+                                'confirmar.html';
+
+                        }, 1500);
+
+                    } else {
+
+                        mostrarAlerta(
+                            resultado.error ||
+                            "Error al iniciar sesión.",
+                            "error"
+                        );
+
+                    }
+                }
+
+            } catch (err) {
+
+                mostrarAlerta(
+                    "Error de red, revisa tu conexión.",
+                    "error"
+                );
+
+            } finally {
+
+                btnSubmit.disabled = false;
+
+                btnSubmit.textContent =
+                    "Ingresar al Sistema";
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>

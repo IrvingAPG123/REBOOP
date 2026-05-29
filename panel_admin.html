@@ -1,0 +1,848 @@
+<!-- ========================= -->
+<!-- PANEL_ADMIN.HTML COMPLETO -->
+<!-- ========================= -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Panel Administrativo REBOOP</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    display:flex;
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:260px;
+    background:#111827;
+    padding:20px;
+    border-right:1px solid #1e293b;
+}
+
+.logo{
+    font-size:28px;
+    font-weight:bold;
+    color:#22c55e;
+    margin-bottom:30px;
+}
+
+.menu button{
+    width:100%;
+    border:none;
+    background:#1e293b;
+    color:white;
+    padding:15px;
+    margin-bottom:12px;
+    border-radius:10px;
+    cursor:pointer;
+    text-align:left;
+    transition:0.3s;
+    font-size:15px;
+}
+
+.menu button:hover{
+    background:#22c55e;
+    color:black;
+}
+
+.menu button.active{
+    background:#22c55e;
+    color:black;
+    font-weight:bold;
+}
+
+/* MAIN */
+
+.main{
+    flex:1;
+    padding:20px;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.search{
+    width:350px;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    outline:none;
+}
+
+.logout{
+    background:#ef4444;
+    border:none;
+    color:white;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+/* CARDS */
+
+.card{
+    background:#111827;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:20px;
+}
+
+.hidden{
+    display:none;
+}
+
+/* TABLES */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th{
+    background:#1e293b;
+    padding:14px;
+}
+
+td{
+    padding:14px;
+    border-bottom:1px solid #1e293b;
+}
+
+tr:hover{
+    background:#1e293b;
+}
+
+/* BUTTONS */
+
+.btn{
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-right:5px;
+}
+
+.edit{
+    background:#3b82f6;
+    color:white;
+}
+
+.delete{
+    background:#ef4444;
+    color:white;
+}
+
+.toggle{
+    background:#22c55e;
+    color:black;
+}
+
+.pdf{
+    background:#f59e0b;
+    color:black;
+    border:none;
+    padding:12px 18px;
+    border-radius:10px;
+    cursor:pointer;
+    margin-bottom:15px;
+}
+
+/* STATS */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.stat-box{
+    background:#1e293b;
+    padding:20px;
+    border-radius:15px;
+}
+
+.stat-box h2{
+    margin-top:10px;
+    font-size:35px;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">
+REBOOP ADMIN
+</div>
+
+<div class="menu">
+
+<button class="active" onclick="mostrar('usuarios', this)">
+Usuarios
+</button>
+
+<button onclick="mostrar('productos', this)">
+Productos
+</button>
+
+<button onclick="mostrar('servicios', this)">
+Servicios
+</button>
+
+<button onclick="mostrar('membresias', this)">
+Membresías
+</button>
+
+<button onclick="mostrar('estadisticas', this)">
+Estadísticas
+</button>
+
+</div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<div class="topbar">
+
+<input
+type="text"
+id="buscador"
+class="search"
+placeholder="Buscar..."
+onkeyup="buscarGeneral()"
+>
+
+<button class="logout" onclick="cerrarSesion()">
+Cerrar sesión
+</button>
+
+</div>
+
+<!-- USUARIOS -->
+
+<div id="usuarios" class="card">
+
+<h1>Usuarios</h1>
+
+<button class="pdf" onclick="window.print()">
+Imprimir usuarios
+</button>
+
+<table>
+
+<thead>
+<tr>
+<th>Nombre</th>
+<th>Correo</th>
+<th>Ciudad</th>
+<th>Rol</th>
+<th>Membresía</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="tablaUsuarios"></tbody>
+
+</table>
+
+</div>
+
+<!-- PRODUCTOS -->
+
+<div id="productos" class="card hidden">
+
+<h1>Productos</h1>
+
+<table>
+
+<thead>
+<tr>
+<th>Título</th>
+<th>Vendedor</th>
+<th>Precio</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="tablaProductos"></tbody>
+
+</table>
+
+</div>
+
+<!-- SERVICIOS -->
+
+<div id="servicios" class="card hidden">
+
+<h1>Servicios</h1>
+
+<table>
+
+<thead>
+<tr>
+<th>Servicio</th>
+<th>Proveedor</th>
+<th>Tarifa</th>
+<th>Estado</th>
+<th>Acciones</th>
+</tr>
+</thead>
+
+<tbody id="tablaServicios"></tbody>
+
+</table>
+
+</div>
+
+<!-- MEMBRESIAS -->
+
+<div id="membresias" class="card hidden">
+
+<h1>Membresías</h1>
+
+<div class="stats">
+
+<div class="stat-box">
+<h3>Usuarios Premium</h3>
+<h2 id="premium">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Membresías Activas</h3>
+<h2 id="activas">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Membresías Vencidas</h3>
+<h2 id="vencidas">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Ganancias</h3>
+<h2 id="ganancias">$0</h2>
+</div>
+
+</div>
+
+</div>
+
+<!-- ESTADISTICAS -->
+
+<div id="estadisticas" class="card hidden">
+
+<h1>Estadísticas</h1>
+
+<div class="stats">
+
+<div class="stat-box">
+<h3>Total Usuarios</h3>
+<h2 id="totalUsuarios">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Total Productos</h3>
+<h2 id="totalProductos">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Total Servicios</h3>
+<h2 id="totalServicios">0</h2>
+</div>
+
+<div class="stat-box">
+<h3>Publicaciones Activas</h3>
+<h2 id="publicacionesActivas">0</h2>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* ========================= */
+/* CAMBIAR SECCIONES */
+/* ========================= */
+
+function mostrar(id, btn){
+
+document.querySelectorAll('.card').forEach(c=>{
+    c.classList.add('hidden');
+});
+
+document.getElementById(id).classList.remove('hidden');
+
+document.querySelectorAll('.menu button').forEach(b=>{
+    b.classList.remove('active');
+});
+
+btn.classList.add('active');
+
+}
+
+/* ========================= */
+/* CERRAR SESION */
+/* ========================= */
+
+function cerrarSesion(){
+
+localStorage.clear();
+window.location.href = '/login.html';
+
+}
+
+/* ========================= */
+/* BUSCADOR */
+/* ========================= */
+
+function buscarGeneral(){
+
+let filtro = document.getElementById('buscador').value.toLowerCase();
+
+document.querySelectorAll('tbody tr').forEach(tr=>{
+
+let texto = tr.innerText.toLowerCase();
+
+tr.style.display = texto.includes(filtro)
+? ''
+: 'none';
+
+});
+
+}
+
+/* ========================= */
+/* CARGAR USUARIOS */
+/* ========================= */
+
+async function cargarUsuarios(){
+
+const res = await fetch('/api/admin/usuarios');
+
+const usuarios = await res.json();
+
+const tabla = document.getElementById('tablaUsuarios');
+
+tabla.innerHTML = '';
+
+usuarios.forEach(u=>{
+
+tabla.innerHTML += `
+
+<tr>
+
+<td>${u.nombre || ''} ${u.apellido || ''}</td>
+
+<td>${u.correo || ''}</td>
+
+<td>${u.ciudad || ''}</td>
+
+<td>${u.rol || 'usuario'}</td>
+
+<td>
+${u.membresia ? 'Premium' : 'Normal'}
+</td>
+
+<td>
+
+<button
+class="btn edit"
+onclick="editarUsuario('${u._id}')">
+Editar
+</button>
+
+<button
+class="btn delete"
+onclick="eliminarUsuario('${u._id}')">
+Eliminar
+</button>
+
+<button
+class="btn toggle"
+onclick="toggleMembresia('${u._id}')">
+Membresía
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById('totalUsuarios').innerText = usuarios.length;
+
+let premium = usuarios.filter(u=>u.membresia).length;
+
+document.getElementById('premium').innerText = premium;
+document.getElementById('activas').innerText = premium;
+document.getElementById('vencidas').innerText = usuarios.length - premium;
+document.getElementById('ganancias').innerText = '$' + (premium * 10);
+
+}
+
+/* ========================= */
+/* CARGAR PRODUCTOS */
+/* ========================= */
+
+async function cargarProductos(){
+
+const res = await fetch('/api/productos');
+
+const productos = await res.json();
+
+const tabla = document.getElementById('tablaProductos');
+
+tabla.innerHTML = '';
+
+productos.forEach(p=>{
+
+tabla.innerHTML += `
+
+<tr>
+
+<td>${p.titulo || ''}</td>
+
+<td>${p.nombreVendedor || ''}</td>
+
+<td>$${p.precio || 0}</td>
+
+<td>
+${p.activo ? 'Activo' : 'Oculto'}
+</td>
+
+<td>
+
+<button
+class="btn delete"
+onclick="eliminarProducto('${p._id}')">
+Eliminar
+</button>
+
+<button
+class="btn toggle"
+onclick="toggleProducto('${p._id}')">
+${p.activo ? 'Ocultar' : 'Mostrar'}
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById('totalProductos').innerText = productos.length;
+
+}
+
+/* ========================= */
+/* CARGAR SERVICIOS */
+/* ========================= */
+
+async function cargarServicios(){
+
+const res = await fetch('/api/inicio-feed');
+
+const servicios = await res.json();
+
+const filtrados = servicios.filter(s=>s.tipoElemento === 'servicio');
+
+const tabla = document.getElementById('tablaServicios');
+
+tabla.innerHTML = '';
+
+filtrados.forEach(s=>{
+
+tabla.innerHTML += `
+
+<tr>
+
+<td>${s.nombreServicio || ''}</td>
+
+<td>${s.nombreProveedor || ''}</td>
+
+<td>$${s.tarifa || 0}</td>
+
+<td>
+${s.activo ? 'Activo' : 'Oculto'}
+</td>
+
+<td>
+
+<button
+class="btn delete"
+onclick="eliminarServicio('${s._id}')">
+Eliminar
+</button>
+
+<button
+class="btn toggle"
+onclick="toggleServicio('${s._id}')">
+${s.activo ? 'Ocultar' : 'Mostrar'}
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById('totalServicios').innerText = filtrados.length;
+
+}
+
+/* ========================= */
+/* EDITAR USUARIO */
+/* ========================= */
+
+async function editarUsuario(id){
+
+const nuevoNombre = prompt('Nuevo nombre');
+
+if(!nuevoNombre) return;
+
+await fetch('/api/admin/editar-usuario',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+id,
+nombre:nuevoNombre
+})
+
+});
+
+cargarUsuarios();
+
+}
+
+/* ========================= */
+/* ELIMINAR USUARIO */
+/* ========================= */
+
+async function eliminarUsuario(id){
+
+if(!confirm('Eliminar usuario?')) return;
+
+await fetch('/api/admin/eliminar-usuario',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({id})
+
+});
+
+cargarUsuarios();
+
+}
+
+/* ========================= */
+/* TOGGLE MEMBRESIA */
+/* ========================= */
+
+async function toggleMembresia(id){
+
+await fetch('/api/admin/toggle-membresia',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({id})
+
+});
+
+cargarUsuarios();
+
+}
+
+/* ========================= */
+/* ELIMINAR PRODUCTO */
+/* ========================= */
+
+async function eliminarProducto(id){
+
+if(!confirm('Eliminar producto?')) return;
+
+await fetch('/api/eliminar-producto',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+id,
+correo:localStorage.getItem('user_correo')
+})
+
+});
+
+cargarProductos();
+
+}
+
+/* ========================= */
+/* TOGGLE PRODUCTO */
+/* ========================= */
+
+async function toggleProducto(id){
+
+await fetch('/api/toggle-visibilidad',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+id,
+tipo:'producto'
+})
+
+});
+
+cargarProductos();
+
+}
+
+/* ========================= */
+/* ELIMINAR SERVICIO */
+/* ========================= */
+
+async function eliminarServicio(id){
+
+if(!confirm('Eliminar servicio?')) return;
+
+await fetch('/api/eliminar-servicio',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+id,
+correo:localStorage.getItem('user_correo')
+})
+
+});
+
+cargarServicios();
+
+}
+
+/* ========================= */
+/* TOGGLE SERVICIO */
+/* ========================= */
+
+async function toggleServicio(id){
+
+await fetch('/api/toggle-visibilidad',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:JSON.stringify({
+id,
+tipo:'servicio'
+})
+
+});
+
+cargarServicios();
+
+}
+
+/* ========================= */
+/* ESTADISTICAS */
+/* ========================= */
+
+async function cargarEstadisticas(){
+
+const usuarios = await fetch('/api/admin/usuarios').then(r=>r.json());
+
+const productos = await fetch('/api/productos').then(r=>r.json());
+
+const feed = await fetch('/api/inicio-feed').then(r=>r.json());
+
+const activos = feed.filter(f=>f.activo).length;
+
+document.getElementById('publicacionesActivas').innerText = activos;
+
+}
+
+/* ========================= */
+/* INICIO */
+/* ========================= */
+
+window.onload = async ()=>{
+
+await cargarUsuarios();
+
+await cargarProductos();
+
+await cargarServicios();
+
+await cargarEstadisticas();
+
+};
+
+</script>
+
+</body>
+</html>

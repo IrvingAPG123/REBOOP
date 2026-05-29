@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REBOOP - Registro</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="alerta-custom" class="alerta-oculta">
+        <span id="alerta-mensaje"></span>
+    </div>
+
+    <div class="login-container" style="position: relative;">
+
+        <a href="/login" class="btn-regresar" title="Volver al Inicio de Sesión">
+            <span class="material-icons">arrow_back</span>
+        </a>
+
+        <div class="login-header">
+            <h1>REBOOP</h1>
+            <p>Crea tu cuenta en la plataforma</p>
+            <span>Región Norte de Veracruz</span>
+        </div>
+
+        <form class="login-form" id="form-registro" autocomplete="off">
+            <div class="input-group">
+                <label for="nombre">Nombre(s)</label>
+                <input type="text" id="nombre" placeholder="Tus nombres" maxlength="30" required>
+            </div>
+
+            <div class="input-group">
+                <label for="apellidoPaterno">Apellido Paterno</label>
+                <input type="text" id="apellidoPaterno" placeholder="Primer apellido" maxlength="30" required>
+            </div>
+
+            <div class="input-group">
+                <label for="apellidoMaterno">Apellido Materno</label>
+                <input type="text" id="apellidoMaterno" placeholder="Segundo apellido" maxlength="30" required>
+            </div>
+
+            <div class="input-group">
+                <label>Fecha de Nacimiento</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="nac-dia" required style="width: 30%; padding: 12px; background-color: #0f141c; color: white; border: 1px solid #34495e; border-radius: 6px; outline: none;"></select>
+                    <select id="nac-mes" required style="width: 40%; padding: 12px; background-color: #0f141c; color: white; border: 1px solid #34495e; border-radius: 6px; outline: none;"></select>
+                    <select id="nac-ano" required style="width: 30%; padding: 12px; background-color: #0f141c; color: white; border: 1px solid #34495e; border-radius: 6px; outline: none;"></select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="telefono">Número de Teléfono</label>
+                <input type="tel" id="telefono" placeholder="7821234567" required>
+            </div>
+
+            <div class="input-group">
+                <label for="ciudad">Ciudad (Campus / Residencia)</label>
+                <input type="text" id="ciudad" placeholder="Poza Rica, Tuxpan, Papantla..." required>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" placeholder="ejemplo@gmail.com" required>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Contraseña</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Mín. 8 caracteres, Mayúscula y Número" required>
+                    <span id="btn-toggle-pwd" class="material-icons toggle-password">visibility_off</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">Registrarse</button>
+        </form>
+
+        <div class="login-footer">
+            <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+
+    <script>
+        const dSelect = document.getElementById('nac-dia');
+        const mSelect = document.getElementById('nac-mes');
+        const aSelect = document.getElementById('nac-ano');
+        const formRegistro = document.getElementById('form-registro');
+        const telInput = document.getElementById('telefono');
+
+        window.addEventListener('pageshow', () => {
+            formRegistro.reset();
+        });
+
+        for (let i = 1; i <= 31; i++) dSelect.options.add(new Option(i, i));
+        const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+        meses.forEach((m, idx) => mSelect.options.add(new Option(m, idx + 1)));
+        for (let i = 2012; i >= 1960; i--) aSelect.options.add(new Option(i, i));
+
+        telInput.addEventListener('input', (e) => {
+            let valor = e.target.value.replace(/\D/g, '');
+            if (valor.length > 10) valor = valor.slice(0, 10);
+            e.target.value = valor;
+        });
+
+        const pwdInput = document.getElementById('password');
+        const btnToggle = document.getElementById('btn-toggle-pwd');
+
+        btnToggle.addEventListener('click', () => {
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                btnToggle.textContent = 'visibility';
+            } else {
+                pwdInput.type = 'password';
+                btnToggle.textContent = 'visibility_off';
+            }
+        });
+
+        const alertaCustom = document.getElementById('alerta-custom');
+        const alertaMensaje = document.getElementById('alerta-mensaje');
+
+        function mostrarAlerta(msg, tipo) {
+            alertaMensaje.textContent = msg;
+            alertaCustom.className = `alerta-visible ${tipo}`;
+            setTimeout(() => { alertaCustom.className = 'alerta-oculta'; }, 4000);
+        }
+
+        formRegistro.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = pwdInput.value.trim();
+            const telefono = telInput.value.trim();
+            const correo = document.getElementById('email').value.trim();
+            const validarPassword = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+            if (telefono.length !== 10) {
+                mostrarAlerta("El número de teléfono debe tener exactamente 10 dígitos.", "error");
+                return;
+            }
+
+            if (!validarPassword.test(password)) {
+                mostrarAlerta("La contraseña debe tener mínimo 8 caracteres, incluir una mayúscula y un número.", "error");
+                return;
+            }
+
+            const datosUsuario = {
+                nombre: document.getElementById('nombre').value.trim(),
+                apellidoPaterno: document.getElementById('apellidoPaterno').value.trim(),
+                apellidoMaterno: document.getElementById('apellidoMaterno').value.trim(),
+                fechaNacimiento: `${dSelect.value}-${mSelect.value}-${aSelect.value}`,
+                telefono: telefono,
+                ciudad: document.getElementById('ciudad').value.trim(),
+                correo: correo,
+                password: password
+            };
+
+            try {
+                const respuesta = await fetch('/api/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosUsuario)
+                });
+                const resultado = await respuesta.json();
+
+                if (respuesta.ok) {
+                    mostrarAlerta("¡Registro exitoso! Enviando código de verificación...", "exito");
+                    
+                    // 🔒 PASO DE MEMORIA CLAVE: Guardamos el correo para que confirmar.html sepa a quién activar
+                    localStorage.setItem('correo_verificacion', correo);
+                    
+                    formRegistro.reset();
+                    
+                    // Redirección directa hacia la pantalla de verificación por token
+                    setTimeout(() => {
+                        window.location.href = '/confirmar.html';
+                    }, 1500);
+                } else {
+                    mostrarAlerta(resultado.error, "error");
+                }
+            } catch (err) {
+                mostrarAlerta("Error al enlazar con el servidor de Atlas.", "error");
+            }
+        });
+    </script>
+</body>
+</html>

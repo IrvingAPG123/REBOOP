@@ -1,0 +1,1304 @@
+raw
+Panel cliente · HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REBOOP - Ecosistema</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121824; color: #ffffff; display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; border-right: 1px solid #2c3e50; padding: 20px 15px; display: flex; flex-direction: column; justify-content: space-between; position: fixed; height: 100vh; z-index: 100; background: #121824; }
+        .sidebar-brand { color: #2ecc71; font-size: 1.8rem; font-weight: bold; letter-spacing: 1px; padding-left: 15px; margin-bottom: 30px; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 10px; }
+        .menu-item { display: flex; align-items: center; gap: 15px; padding: 12px 15px; color: #ecf0f1; text-decoration: none; font-size: 1.1rem; border-radius: 30px; cursor: pointer; transition: 0.3s; }
+        .menu-item:hover, .menu-item.active { background-color: rgba(46, 204, 113, 0.1); color: #2ecc71; font-weight: bold; }
+        
+        .main-content { margin-left: 260px; flex: 1; padding: 40px; max-width: 1000px; height: 100vh; overflow-y: auto; position: relative; }
+        .tab-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .tab-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .data-card { background-color: #1a2333; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-left: 5px solid #2ecc71; margin-top: 20px; }
+        .data-card h2 { margin-bottom: 20px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2c3e50; }
+        .data-row:last-child { border-bottom: none; }
+        .data-label { color: #7f8c8d; font-weight: 500; min-width: 180px; }
+        .data-value { color: #ffffff; }
+        
+        .btn-logout { background-color: #e74c3c; color: white; text-align: center; padding: 12px; border-radius: 30px; text-decoration: none; font-weight: bold; display: block; transition: 0.3s; }
+        .btn-logout:hover { background-color: #c0392b; }
+        .btn-pagar { background-color: #2ecc71; color: #121824; border: none; padding: 14px 30px; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.3s; margin-top: 20px; width: 100%; }
+        .btn-pagar:hover { background-color: #27ae60; transform: translateY(-1px); }
+        .input-box { width: 100%; padding: 12px; background-color: #0f141c; border: 1px solid #34495e; border-radius: 6px; color: #fff; font-size: 1rem; margin-top: 8px; margin-bottom: 15px; outline: none; }
+        .input-box:focus { border-color: #2ecc71; }
+        .beneficios-list { list-style: none; margin-top: 10px; }
+        .beneficios-list li { padding: 8px 0; display: flex; align-items: center; gap: 10px; color: #b2bec3; font-size: 0.95rem; }
+ 
+        .header-sticky-container { position: sticky; top: -40px; background-color: #121824; padding-top: 10px; padding-bottom: 15px; z-index: 50; border-bottom: 1px solid rgba(44, 62, 80, 0.4); margin-bottom: 20px; }
+        .header-sticky-container h1 { font-size: 2.2rem; font-weight: bold; color: #ffffff; margin-bottom: 4px; }
+        .header-sticky-container p { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 15px; }
+ 
+        .search-container { display: flex; gap: 12px; align-items: center; background-color: #1a2333; padding: 10px 15px; border-radius: 40px; border: 1px solid #2c3e50; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .search-bar-wrapper { position: relative; flex: 1; }
+        .search-bar-wrapper .material-icons { position: absolute; left: 5px; top: 50%; transform: translateY(-50%); color: #7f8c8d; }
+        .btn-buscar-lupa { position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: #2ecc71; border: none; color: #121824; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .btn-buscar-lupa:hover { background: #27ae60; }
+        .input-busqueda { width: 100%; padding: 10px 45px 10px 35px; background: transparent; border: none; color: white; font-size: 0.95rem; outline: none; }
+        .select-filtro { padding: 10px 20px; background-color: #0f141c; border: 1px solid #2c3e50; border-radius: 30px; color: white; outline: none; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: 0.3s; }
+        .select-filtro:focus { border-color: #2ecc71; }
+        
+        .wall-feed { display: flex; flex-direction: column; gap: 25px; }
+        .post-card { background-color: #1a2333; border-radius: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: 1px solid #2c3e50; overflow: hidden; display: flex; flex-direction: column; }
+        .post-header { display: flex; align-items: center; gap: 12px; padding: 18px; border-bottom: 1px solid #2c3e50; position: relative; }
+        .post-avatar-wrap { position: relative; cursor: pointer; display: inline-block; }
+        .post-avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #2ecc71; background-color: #0f141c; display: block; }
+        .post-avatar-initials { width: 46px; height: 46px; border-radius: 50%; background-color: #2ecc71; color: #121824; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; border: 2px solid #2ecc71; text-transform: uppercase; }
+        .post-author-info { display: flex; flex-direction: column; }
+        .post-author-name { font-weight: bold; color: #ffffff; font-size: 1.05rem; cursor: pointer; transition: 0.2s; }
+        .post-author-name:hover { color: #2ecc71; text-decoration: underline; }
+        .post-meta-date { font-size: 0.8rem; color: #7f8c8d; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+        
+        .contact-popover { position: absolute; top: 70px; left: 18px; background: #0f141c; border: 1px solid #2ecc71; width: 290px; border-radius: 10px; padding: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); display: none; flex-direction: column; gap: 10px; z-index: 200; animation: popoverEffect 0.2s ease-in-out; }
+        @keyframes popoverEffect { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .contact-popover-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2c3e50; padding-bottom: 8px; }
+        .contact-popover-title { font-weight: bold; color: #2ecc71; font-size: 0.95rem; }
+        .contact-detail-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #b2bec3; }
+        .contact-detail-row span { font-size: 16px; color: #7f8c8d; }
+        .btn-whatsapp-connect { background-color: #25d366; color: white; border: none; padding: 9px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; margin-top: 5px; transition: 0.3s; }
+        .btn-whatsapp-connect:hover { background-color: #1ebd59; }
+ 
+        .post-body { padding: 18px; }
+        .post-title { font-size: 1.4rem; font-weight: bold; color: #2ecc71; margin-bottom: 10px; }
+        .post-desc { color: #b2bec3; line-height: 1.5; font-size: 0.98rem; margin-bottom: 15px; white-space: pre-wrap; }
+        .post-specs-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 15px 0; background: #0f141c; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; }
+        .spec-pill { font-size: 0.88rem; color: #b2bec3; display: flex; align-items: center; gap: 6px; }
+        .spec-pill strong { color: white; }
+        .post-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; background: #0f141c; padding: 10px; max-height: 400px; overflow: hidden; }
+        .post-img { width: 100%; height: 250px; object-fit: cover; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .post-img:hover { filter: brightness(1.1); transform: scale(1.01); }
+        .post-footer { padding: 15px 18px; background: #151d2a; border-top: 1px solid #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .post-price { font-size: 1.5rem; font-weight: bold; color: #f1c40f; display: flex; align-items: center; gap: 4px; }
+        .post-badge-eco { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+ 
+        /* ===== BOTONES OCULTAR/ELIMINAR EN MIS PUBLICACIONES ===== */
+        .post-acciones-propias { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; z-index: 10; }
+        .btn-accion-post { border: none; border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+        .btn-ocultar-post { background-color: rgba(241,196,15,0.15); color: #f1c40f; border: 1px solid #f1c40f; }
+        .btn-ocultar-post:hover { background-color: rgba(241,196,15,0.3); }
+        .btn-eliminar-post { background-color: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid #e74c3c; }
+        .btn-eliminar-post:hover { background-color: rgba(231,76,60,0.3); }
+        .post-oculto-overlay { background: rgba(15,20,28,0.85); text-align: center; padding: 20px; color: #7f8c8d; font-style: italic; font-size: 0.9rem; border-top: 1px solid #2c3e50; }
+ 
+        /* ===== PERFIL ===== */
+        .perfil-layout { display: flex; gap: 30px; align-items: flex-start; margin-top: 20px; }
+        .perfil-foto-col { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 160px; }
+        .perfil-foto { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid #2ecc71; }
+        .perfil-foto-placeholder { width: 140px; height: 140px; border-radius: 50%; background-color: #0f141c; border: 4px solid #34495e; display: flex; align-items: center; justify-content: center; }
+        .perfil-foto-placeholder .material-icons { font-size: 60px; color: #7f8c8d; }
+        .btn-foto { background-color: transparent; border: 1px solid #2ecc71; color: #2ecc71; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: 0.3s; display: flex; align-items: center; gap: 5px; }
+        .btn-foto:hover { background-color: rgba(46,204,113,0.1); }
+        .perfil-datos-col { flex: 1; }
+        .edit-input { width: 100%; padding: 8px 12px; background-color: #0f141c; border: 1px solid #2ecc71; border-radius: 6px; color: #fff; font-size: 0.95rem; outline: none; }
+        .edit-textarea { width: 100%; padding: 10px 12px; background-color: #0f141c; border: 1px solid #2ecc71; border-radius: 6px; color: #fff; font-size: 0.95rem; outline: none; resize: none; height: 80px; }
+        .btn-editar { background-color: transparent; border: 1px solid #3498db; color: #3498db; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: 0.3s; display: flex; align-items: center; gap: 5px; margin-top: 15px; }
+        .btn-guardar { background-color: #2ecc71; color: #121824; border: none; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: 0.3s; margin-right: 10px; }
+        .btn-guardar:hover { background-color: #27ae60; }
+        .btn-cancelar { background-color: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .btn-cancelar:hover { background-color: rgba(231,76,60,0.1); }
+        .acciones-edicion { display: flex; align-items: center; margin-top: 15px; }
+ 
+        /* ===== FORMULARIO PRODUCTO ===== */
+        .form-group { display: flex; flex-direction: column; width: 100%; margin-bottom: 5px; }
+        .form-label { color: #ecf0f1; font-size: 0.9rem; margin-bottom: 4px; font-weight: 500; }
+        .form-hint { color: #7f8c8d; font-size: 0.78rem; margin-bottom: 6px; line-height: 1.4; }
+        .preview-img-wrap { position: relative; width: 100px; height: 100px; }
+        .preview-img-wrap img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #34495e; }
+        .preview-img-wrap .btn-remove { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+ 
+<div class="sidebar">
+    <div class="sidebar-menu">
+        <div class="sidebar-brand">REBOOP</div>
+        <div class="menu-item active" data-tab="inicio"><span class="material-icons">home</span> Inicio</div>
+        <div class="menu-item" data-tab="perfil"><span class="material-icons">person</span> Perfil</div>
+        <div class="menu-item" data-tab="servicios"><span class="material-icons">build</span> Servicios</div>
+        <div class="menu-item" data-tab="membresia"><span class="material-icons">card_membership</span> Membresía</div>
+        <div class="menu-item" data-tab="subir"><span class="material-icons">cloud_upload</span> Subir Producto</div>
+    </div>
+    <div>
+        <a href="/login" id="btn-cerrar-sesion" class="btn-logout">Cerrar Sesión</a>
+    </div>
+</div>
+ 
+<div class="main-content">
+ 
+    <!-- ══════════ INICIO ══════════ -->
+    <div id="sec-inicio" class="tab-section active">
+        <div class="header-sticky-container">
+            <h1>Inicio</h1>
+            <p>Explora la chatarra tecnológica disponible en la región norte de Veracruz</p>
+            <div class="search-container">
+                <div class="search-bar-wrapper">
+                    <span class="material-icons">search</span>
+                    <input type="text" id="txt-buscar-wall" class="input-busqueda" placeholder="Buscar por componente, marca, modelo... (Presiona Enter)">
+                    <button class="btn-buscar-lupa" id="btn-lupa-ejecutar" title="Buscar ahora">
+                        <span class="material-icons" style="font-size:18px; color:#121824;">arrow_forward</span>
+                    </button>
+                </div>
+                <select id="select-orden-wall" class="select-filtro" onchange="cargarMuroFeed()">
+                    <option value="recientes">Más recientes</option>
+                    <option value="pasadas">Publicaciones pasadas</option>
+                    <option value="baratos">Menor precio primero</option>
+                </select>
+            </div>
+        </div>
+        <div id="contenedor-muro-feed" class="wall-feed">
+            <p style="color:#7f8c8d; text-align:center; padding:40px;">Cargando feed regional...</p>
+        </div>
+    </div>
+ 
+    <!-- ══════════ PERFIL ══════════ -->
+    <div id="sec-perfil" class="tab-section">
+        <h1>Mi Perfil</h1>
+        <p style="color:#7f8c8d; margin-top:5px;">Información de tu cuenta guardada en la nube</p>
+ 
+        <div class="data-card">
+            <h2><span class="material-icons" style="color:#2ecc71;">account_box</span>Datos Personales</h2>
+            <div class="perfil-layout">
+                <div class="perfil-foto-col">
+                    <div class="perfil-foto-placeholder" id="foto-placeholder">
+                        <span class="material-icons">person</span>
+                    </div>
+                    <img id="foto-perfil-img" class="perfil-foto" src="" alt="Foto" style="display:none;">
+                    <button class="btn-foto" onclick="document.getElementById('input-foto').click()">
+                        <span class="material-icons" style="font-size:16px;">photo_camera</span> Cambiar foto
+                    </button>
+                    <input type="file" id="input-foto" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                    <p id="txt-estado-foto" style="font-size:0.75rem; color:#7f8c8d; text-align:center;"></p>
+                </div>
+                <div class="perfil-datos-col">
+                    <div id="modo-vista">
+                        <div class="data-row"><span class="data-label">Nombre(s):</span><span id="lbl-nombre" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Apellidos:</span><span id="lbl-apellido" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Fecha de Nacimiento:</span><span id="lbl-fecha" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Teléfono:</span><span id="lbl-telefono" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Ciudad / Campus:</span><span id="lbl-ciudad" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Correo:</span><span id="lbl-correo" class="data-value">Cargando...</span></div>
+                        <div class="data-row"><span class="data-label">Nivel de Acceso:</span><span id="lbl-rol" class="data-value" style="color:#e67e22; font-weight:bold; text-transform:uppercase;">usuario</span></div>
+                        <button class="btn-editar" id="btn-activar-edicion">
+                            <span class="material-icons" style="font-size:16px;">edit</span> Editar datos
+                        </button>
+                    </div>
+                    <div id="modo-edicion" style="display:none;">
+                        <div class="data-row"><span class="data-label">Nombre(s):</span><input type="text" id="edit-nombre" class="edit-input" maxlength="30"></div>
+                        <div class="data-row"><span class="data-label">Apellidos:</span><input type="text" id="edit-apellido" class="edit-input" maxlength="60"></div>
+                        <div class="data-row"><span class="data-label">Fecha Nac.:</span><span id="lbl-fecha-readonly" style="color:#7f8c8d; font-style:italic;">No editable</span></div>
+                        <div class="data-row"><span class="data-label">Teléfono:</span><input type="tel" id="edit-telefono" class="edit-input" maxlength="10"></div>
+                        <div class="data-row"><span class="data-label">Ciudad:</span><input type="text" id="edit-ciudad" class="edit-input" maxlength="50"></div>
+                        <div class="data-row"><span class="data-label">Correo:</span><span id="lbl-correo-readonly" style="color:#7f8c8d; font-style:italic;">No editable</span></div>
+                        <div class="acciones-edicion">
+                            <button class="btn-guardar" id="btn-guardar-perfil">💾 Guardar</button>
+                            <button class="btn-cancelar" id="btn-cancelar-edicion">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <div style="margin-top:25px; border-top:1px solid #2c3e50; padding-top:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="color:#3498db; display:flex; align-items:center; gap:8px;">
+                        <span class="material-icons" style="font-size:20px;">format_quote</span> Mi Presentación
+                    </h3>
+                    <button class="btn-editar" id="btn-editar-presentacion" style="margin-top:0;">
+                        <span class="material-icons" style="font-size:16px;">edit</span> Editar
+                    </button>
+                </div>
+                <div id="vista-presentacion">
+                    <p id="lbl-presentacion" style="color:#b2bec3; line-height:1.6; font-style:italic;">Sin presentación aún.</p>
+                </div>
+                <div id="edicion-presentacion" style="display:none;">
+                    <textarea id="edit-presentacion" class="edit-textarea" maxlength="300" placeholder="Escribe una breve presentación..."></textarea>
+                    <div class="acciones-edicion">
+                        <button class="btn-guardar" id="btn-guardar-presentacion">💾 Guardar</button>
+                        <button class="btn-cancelar" id="btn-cancelar-presentacion">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+        <h2 style="margin-top:35px; font-size:1.4rem; color:#2ecc71; display:flex; align-items:center; gap:10px;">
+            <span class="material-icons">history</span> Mis Publicaciones en REBOOP
+        </h2>
+        <div id="contenedor-mis-publicaciones" class="wall-feed" style="margin-top:15px;">
+            <p style="color:#7f8c8d; text-align:center; padding:20px;">Cargando tu historial...</p>
+        </div>
+    </div>
+ 
+    <!-- ══════════ SERVICIOS ══════════ -->
+    <div id="sec-servicios" class="tab-section">
+        <h1>Ofrecer Servicio Profesional</h1>
+        <p style="color:#7f8c8d; margin-top:5px;">Publica tu oferta de soporte, redes, programación o reparación en el ecosistema regional</p>
+ 
+        <div id="servicios-bloqueado" class="data-card" style="border-left-color:#e74c3c; display:block;">
+            <h2><span class="material-icons" style="color:#e74c3c;">lock</span>Módulo Premium Bloqueado</h2>
+            <p style="color:#b2bec3; line-height:1.6;">Requieres poseer una membresía comercial activa para publicar servicios informáticos en la plataforma REBOOP.</p>
+            <button class="btn-pagar" style="margin-top:15px;" onclick="irATab('membresia')">Habilitar Membresía Premium</button>
+        </div>
+ 
+        <div id="servicios-desbloqueado" style="display:none;">
+            <form id="form-servicio-tecnico">
+                <div class="data-card">
+                    <h2><span class="material-icons" style="color:#2ecc71;">business_center</span>Información del Servicio Técnico</h2>
+                    <div class="form-group">
+                        <label class="form-label">Nombre del servicio o especialidad <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" id="srv-nombre" class="input-box" required placeholder="Ej. Reparación y mantenimiento preventivo de Laptops / PC">
+                    </div>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Categoría del Servicio <span style="color:#e74c3c;">*</span></label>
+                            <select id="srv-categoria" class="input-box" required>
+                                <option value="">— Selecciona —</option>
+                                <option value="Soporte y Hardware">Soporte y Hardware</option>
+                                <option value="Redes e Infraestructura">Redes e Infraestructura</option>
+                                <option value="Desarrollo de Software">Desarrollo de Software</option>
+                                <option value="Bases de Datos">Bases de Datos</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Modalidad <span style="color:#e74c3c;">*</span></label>
+                            <select id="srv-modalidad" class="input-box" required>
+                                <option value="">— Selecciona —</option>
+                                <option value="Presencial / A domicilio">Presencial / A domicilio</option>
+                                <option value="Remoto / En línea">Remoto / En línea</option>
+                                <option value="Mixto">Mixto</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:180px;">
+                            <label class="form-label">Tarifa base aproximada en MXN <span style="color:#e74c3c;">*</span></label>
+                            <input type="number" id="srv-tarifa" class="input-box" required placeholder="Ej. 250">
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:180px;">
+                            <label class="form-label">Disponibilidad de Horarios <span style="color:#e74c3c;">*</span></label>
+                            <input type="text" id="srv-horarios" class="input-box" required placeholder="Ej. Lunes a Viernes 4 PM a 8 PM">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Certificaciones / Experiencia (Opcional)</label>
+                        <input type="text" id="srv-certificaciones" class="input-box" placeholder="Ej. Estudiante de ITC 6to Semestre / CCNA Cisco aprobado">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción detallada del servicio brindado <span style="color:#e74c3c;">*</span></label>
+                        <textarea id="srv-descripcion" class="input-box" style="height:100px; resize:none;" required placeholder="Describe las fallas que resuelves..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Imagen ilustrativa del servicio</label>
+                        <input type="file" id="input-imagen-servicio" accept="image/*" class="input-box" style="padding:8px;">
+                    </div>
+                    <button type="submit" class="btn-pagar">Publicar Oferta de Servicio Técnico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <!-- ══════════ MEMBRESÍA ══════════ -->
+    <div id="sec-membresia" class="tab-section">
+        <h1>Estado de Membresía</h1>
+        <p style="color:#7f8c8d; margin-top:5px;">Control de vigencia y acceso comercial regional</p>
+        <div class="data-card" style="border-left-color:#f1c40f;">
+            <h2><span class="material-icons" style="color:#f1c40f;">my_location</span>Ubicación y Hora</h2>
+            <div class="data-row"><span class="data-label">Ubicación:</span><span id="lbl-ubicacion-gps" class="data-value" style="color:#2ecc71; font-weight:bold;">Sincronizando...</span></div>
+            <div class="data-row"><span class="data-label">Coordenadas:</span><span id="lbl-coordenadas" class="data-value" style="color:#3498db; font-size:0.9rem;">Esperando permisos...</span></div>
+            <div class="data-row"><span class="data-label">Hora Local:</span><span id="lbl-hora-local" class="data-value" style="font-weight:bold; color:#f1c40f;">Sincronizando...</span></div>
+        </div>
+        <div class="data-card" style="border-left-color:#9b59b6;">
+            <h2><span class="material-icons" style="color:#9b59b6;">monetization_on</span>Beneficios</h2>
+            <ul id="lista-beneficios" class="beneficios-list"><li>Cargando...</li></ul>
+        </div>
+        <div id="card-activa" class="data-card" style="border-left-color:#2ecc71; display:none;">
+            <h2><span class="material-icons" style="color:#2ecc71;">workspace_premium</span>Membresía Activa</h2>
+            <div class="data-row"><span class="data-label">Estado:</span><span class="data-value" style="background:#2ecc71; color:#121824; padding:2px 10px; border-radius:20px; font-weight:bold;">ACTIVO</span></div>
+            <div class="data-row"><span class="data-label">Días restantes:</span><span id="dias-restantes" class="data-value" style="color:#f1c40f; font-weight:bold;">--</span></div>
+            <div class="data-row"><span class="data-label">Vencimiento:</span><span id="fecha-vence" class="data-value" style="color:#e74c3c; font-weight:bold;">--</span></div>
+        </div>
+        <div id="card-inactiva" class="data-card" style="border-left-color:#e74c3c; display:none;">
+            <h2><span class="material-icons" style="color:#e74c3c;">lock_open</span>Sin Membresía Activa</h2>
+            <p style="color:#b2bec3; margin-bottom:10px;">Requieres aportación mensual de <strong style="color:#2ecc71;">$10 MXN</strong> para comercializar.</p>
+            <button id="btn-pagar" class="btn-pagar">💳 Pagar / Renovar con Mercado Pago</button>
+        </div>
+        <div id="card-cargando" class="data-card" style="border-left-color:#7f8c8d; text-align:center;"><p>Verificando en Atlas...</p></div>
+    </div>
+    
+ 
+    <!-- ══════════ SUBIR PRODUCTO ══════════ -->
+    <div id="sec-subir" class="tab-section">
+        <h1>Publicar Componente de E-Waste</h1>
+        <p style="color:#7f8c8d; margin-top:5px;">Coloca tu equipo o chatarra electrónica en el mercado regional</p>
+ 
+        <div id="subir-bloqueado" class="data-card" style="border-left-color:#e74c3c; display:block;">
+            <h2><span class="material-icons" style="color:#e74c3c;">lock</span>Sección Bloqueada</h2>
+            <p style="color:#b2bec3; line-height:1.6;">Necesitas membresía activa para publicar productos en REBOOP.</p>
+            <button class="btn-pagar" style="margin-top:15px;" onclick="irATab('membresia')">💳 Activar membresía</button>
+        </div>
+ 
+        <div id="subir-desbloqueado" style="display:none;">
+            <form id="form-producto" enctype="multipart/form-data">
+                <div class="data-card" style="margin-top:20px;">
+                    <h2><span class="material-icons" style="color:#2ecc71;">inventory_2</span>Información Básica</h2>
+                    <div class="form-group">
+                        <label class="form-label">Título del producto <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" name="titulo" class="input-box" maxlength="80" required placeholder="Ej. Laptop HP EliteBook 840 sin cargador">
+                    </div>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Categoría <span style="color:#e74c3c;">*</span></label>
+                            <select name="categoria" class="input-box" required id="prod-categoria" onchange="actualizarSubcategoria()">
+                                <option value="">— Selecciona una categoría —</option>
+                                <option value="Computadoras">Computadoras</option>
+                                <option value="Celulares y tablets">Celulares y Tablets</option>
+                                <option value="Componentes electrónicos">Componentes Electrónicos</option>
+                                <option value="Redes y telecomunicaciones">Redes y Telecomunicaciones</option>
+                                <option value="Audio y video">Audio y Video</option>
+                                <option value="Energía y baterías">Energía y Baterías</option>
+                                <option value="Cables y accesorios">Cables y Accesorios</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Subcategoría <span style="color:#e74c3c;">*</span></label>
+                            <select name="subcategoria" class="input-box" required id="prod-subcategoria" onchange="actualizarCamposTecnicos()">
+                                <option value="">— Primero elige categoría —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Estado del equipo <span style="color:#e74c3c;">*</span></label>
+                            <select name="estado" class="input-box" required>
+                                <option value="">— Selecciona el estado —</option>
+                                <option value="Funciona correctamente">Funciona correctamente</option>
+                                <option value="Funciona parcialmente">Funciona parcialmente</option>
+                                <option value="Para reparar">Para reparar</option>
+                                <option value="Solo piezas">Solo piezas</option>
+                                <option value="Reciclaje">Solo reciclaje</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:200px;">
+                            <label class="form-label">Tipo de aprovechamiento <span style="color:#e74c3c;">*</span></label>
+                            <select name="aprovechamiento" class="input-box" required>
+                                <option value="">— Selecciona —</option>
+                                <option value="Reutilización completa">Reutilización completa</option>
+                                <option value="Recuperación de piezas">Recuperación de piezas</option>
+                                <option value="Reciclaje de materiales">Reciclaje de materiales</option>
+                                <option value="Donación">Donación</option>
+                                <option value="Venta directa">Venta directa</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción detallada <span style="color:#e74c3c;">*</span></label>
+                        <textarea name="descripcion" class="input-box" id="prod-descripcion" style="height:110px; resize:none;" maxlength="600" required placeholder="Describe qué funciona, qué no..."></textarea>
+                        <p id="contador-desc" style="color:#7f8c8d; font-size:0.78rem; text-align:right; margin-top:-10px;">0 / 600</p>
+                    </div>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:180px;">
+                            <label class="form-label">Precio en MXN <span style="color:#e74c3c;">*</span></label>
+                            <input type="number" name="precio" class="input-box" placeholder="Ej. 800" min="0" required>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:180px;">
+                            <label class="form-label">Ubicación <span style="color:#e74c3c;">*</span></label>
+                            <input type="text" name="ubicacion" class="input-box" placeholder="Ej. Poza Rica, Veracruz" required>
+                        </div>
+                    </div>
+                </div>
+ 
+                <div id="bloque-tecnico" class="data-card" style="border-left-color:#3498db; display:none; margin-top:15px;">
+                    <h2><span class="material-icons" style="color:#3498db;">settings</span>Especificaciones Técnicas</h2>
+                    <div id="campos-tecnicos" style="display:flex; flex-wrap:wrap; gap:15px;"></div>
+                </div>
+ 
+                <div class="data-card" style="border-left-color:#2ecc71; margin-top:15px;">
+                    <h2><span class="material-icons" style="color:#2ecc71;">eco</span>Impacto Ambiental</h2>
+                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1; min-width:150px;">
+                            <label class="form-label">¿Contiene batería?</label>
+                            <select name="contieneBateria" class="input-box">
+                                <option value="">— Selecciona —</option>
+                                <option value="Sí">Sí</option>
+                                <option value="No">No</option>
+                                <option value="No sé">No sé</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:150px;">
+                            <label class="form-label">Material predominante</label>
+                            <select name="materialPredominante" class="input-box">
+                                <option value="">— Selecciona —</option>
+                                <option value="Plástico">Plástico</option>
+                                <option value="Metal">Metal</option>
+                                <option value="Aluminio">Aluminio</option>
+                                <option value="Mixto">Mixto</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:150px;">
+                            <label class="form-label">Riesgo ambiental</label>
+                            <select name="riesgoAmbiental" class="input-box">
+                                <option value="">— Selecciona —</option>
+                                <option value="Bajo">Bajo</option>
+                                <option value="Medio">Medio</option>
+                                <option value="Alto">Alto</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1; min-width:150px;">
+                            <label class="form-label">Peso aproximado</label>
+                            <input type="text" name="pesoAproximado" class="input-box" placeholder="Ej. 1.5 kg">
+                        </div>
+                    </div>
+                </div>
+ 
+                <div class="data-card" style="border-left-color:#f1c40f; margin-top:15px;">
+                    <h2><span class="material-icons" style="color:#f1c40f;">photo_library</span>Imágenes del Producto</h2>
+                    <input type="file" id="input-imagenes" name="imagenes" accept="image/jpeg,image/png,image/webp" multiple style="display:none;" onchange="previsualizarImagenes(event)">
+                    <div id="zona-drop" onclick="document.getElementById('input-imagenes').click()" style="border:2px dashed #34495e; border-radius:10px; padding:30px; text-align:center; cursor:pointer;">
+                        <span class="material-icons" style="font-size:40px; color:#7f8c8d;">cloud_upload</span>
+                        <p style="color:#7f8c8d; margin-top:8px;">Haz clic para seleccionar imágenes</p>
+                    </div>
+                    <div id="preview-imagenes" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:15px;"></div>
+                </div>
+ 
+                <div style="margin-top:20px; text-align:center;">
+                    <button type="submit" id="btn-publicar" class="btn-pagar" style="max-width:400px;">🚀 Publicar en el Mercado REBOOP</button>
+                    <p id="txt-estado-publicar" style="margin-top:10px; font-size:0.9rem; color:#7f8c8d;"></p>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+</div>
+ 
+<script>
+    // 1. RENDERIZAR TARJETA (Muro y Perfil unificado)
+function renderizarPostCard(p, esPerfil = false) {
+    const idPost = p._id;
+    const isOwner = (p.correoVendedor || p.correoProveedor) === localStorage.getItem('user_correo');
+    
+    return `
+        <div class="post-card" id="card-${idPost}" style="border-left: 5px solid ${p.activo ? '#2ecc71' : '#7f8c8d'};">
+            
+            <div class="post-acciones-propias">
+                <span class="material-icons" onclick="toggleMenu('${idPost}')" style="cursor:pointer; color:#7f8c8d;">more_vert</span>
+                <div id="menu-${idPost}" class="dropdown-content">
+                    ${isOwner ? `
+                        <button class="btn-accion-post" onclick="ocultarPublicacion('${idPost}', '${p.tipoElemento}')">
+                            ${p.activo ? '🙈 Ocultar' : '👁️ Mostrar'}
+                        </button>
+                        <button class="btn-accion-post" onclick="eliminarPublicacion('${idPost}', '${p.tipoElemento}')" style="color:#e74c3c;">🗑️ Eliminar</button>
+                    ` : `
+                        <button class="btn-accion-post" onclick="compartir('${idPost}')">🔁 Compartir</button>
+                    `}
+                    <button class="btn-accion-post" onclick="guardar('${idPost}')">🔖 Guardar</button>
+                </div>
+            </div>
+
+            <div class="post-body">
+                <div class="post-title">${p.titulo || p.nombreServicio}</div>
+                <p class="post-desc">${p.descripcion}</p>
+                <div class="post-footer">
+                    <button onclick="darLike('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;">❤️ Like (${p.likes?.length || 0})</button>
+                    <button onclick="guardar('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#f1c40f; cursor:pointer;">🔖 Guardar</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function toggleMenu(id) {
+    const menu = document.getElementById(`menu-${id}`);
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// 2. LÓGICA DE OCULTAR (Sin borrar de la BD)
+async function ocultarPublicacion(id, tipo) {
+    const res = await fetch('/api/toggle-visibilidad', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id, tipo })
+    });
+    const data = await res.json();
+    alert('Publicación ahora está: ' + data.mensaje);
+    // Recargamos según donde estemos
+    if (document.getElementById('sec-perfil').classList.contains('active')) cargarMisPublicaciones();
+    else cargarMuroFeed();
+}
+
+// 3. LÓGICA DE ELIMINAR (Borra de la BD)
+async function eliminarPublicacion(id, tipo) {
+    if(!confirm('¿Eliminar permanentemente?')) return;
+    const ruta = tipo === 'servicio' ? '/api/eliminar-servicio' : '/api/eliminar-producto';
+    await fetch(ruta, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id, correo: localStorage.getItem('user_correo') })
+    });
+    cargarMisPublicaciones();
+}
+
+// 4. MANTEN TUS OTRAS FUNCIONES (Cargar feed, cargarMisPublicaciones, etc.)
+// Asegúrate de que cargarMisPublicaciones NO filtre por {activo: true}
+async function cargarMisPublicaciones() {
+    const contenedor = document.getElementById('contenedor-mis-publicaciones');
+    const miCorreo = localStorage.getItem('user_correo');
+    const res = await fetch('/api/inicio-feed');
+    const total = await res.json();
+    const misPosts = total.filter(p => (p.correoVendedor || p.correoProveedor || '').toLowerCase().trim() === miCorreo.toLowerCase().trim());
+    contenedor.innerHTML = misPosts.map(p => renderizarPostCard(p, true)).join('');
+}
+// ══════════════════════════════════════════
+// FEED PÚBLICO (INICIO)
+// ══════════════════════════════════════════
+const inputBusquedaGlobal = document.getElementById('txt-buscar-wall');
+ 
+inputBusquedaGlobal.addEventListener('keydown', (e) => { if (e.key === 'Enter') cargarMuroFeed(); });
+document.getElementById('btn-lupa-ejecutar').addEventListener('click', cargarMuroFeed);
+inputBusquedaGlobal.addEventListener('input', () => {
+    if (window.innerWidth <= 768 || /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        clearTimeout(window.searchDelay);
+        window.searchDelay = setTimeout(cargarMuroFeed, 400);
+    }
+});
+ 
+function alternarPopoverContacto(idPopover) {
+    document.querySelectorAll('.contact-popover').forEach(p => { if (p.id !== idPopover) p.style.display = 'none'; });
+    const popover = document.getElementById(idPopover);
+    if (popover) popover.style.display = (popover.style.display === 'flex') ? 'none' : 'flex';
+}
+ 
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.post-author-name') && !e.target.closest('.post-avatar-wrap') && !e.target.closest('.contact-popover'))
+        document.querySelectorAll('.contact-popover').forEach(p => p.style.display = 'none');
+});
+ 
+async function cargarMuroFeed() {
+    const contenedor = document.getElementById('contenedor-muro-feed');
+    const bTexto = inputBusquedaGlobal.value.trim();
+    const orden  = document.getElementById('select-orden-wall').value;
+ 
+    try {
+        const res = await fetch(`/api/inicio-feed?buscar=${encodeURIComponent(bTexto)}&orden=${orden}`);
+        const dataFeed = await res.json();
+ 
+        if (dataFeed.length === 0) {
+            contenedor.innerHTML = '<div style="text-align:center; padding:40px; color:#7f8c8d;"><p>No hay publicaciones disponibles.</p></div>';
+            return;
+        }
+ 
+        contenedor.innerHTML = dataFeed.map((p, index) => {
+            const fecha = new Date(p.fechaPublicacion).toLocaleDateString('es-MX', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+            const idPopover = `popover-${index}`;
+            const fotoPerfilReal = p.tipoElemento === 'servicio' ? p.fotoPerfilProveedor : p.fotoPerfilVendedor;
+            const nombreMostrar  = p.tipoElemento === 'servicio' ? p.nombreProveedor    : p.nombreVendedor;
+            const correoContacto = p.tipoElemento === 'servicio' ? p.correoProveedor    : p.correoVendedor;
+            const avatarHTML = fotoPerfilReal
+                ? `<img src="${fotoPerfilReal}" class="post-avatar" alt="Avatar">`
+                : `<div class="post-avatar-initials">${(nombreMostrar || 'U').charAt(0).toUpperCase()}</div>`;
+ 
+            if (p.tipoElemento === 'servicio') {
+                const srvImgHTML = p.imagenServicio ? `<div class="post-gallery"><img src="${p.imagenServicio}" class="post-img" onclick="window.open('${p.imagenServicio}', '_blank')"></div>` : '';
+                return `
+                    <div class="post-card" style="border-left:5px solid #3498db;">
+                        <div class="post-header">
+                            <div class="post-avatar-wrap" onclick="alternarPopoverContacto('${idPopover}')">${avatarHTML}</div>
+                            <div class="post-author-info">
+                                <span class="post-author-name" onclick="alternarPopoverContacto('${idPopover}')">${nombreMostrar}</span>
+                                <span class="post-meta-date">Servicio Publicado: ${fecha} • 📍 ${p.ubicacion || 'Región UV'}</span>
+                            </div>
+                            <div class="contact-popover" id="${idPopover}">
+                                <div class="contact-popover-header"><span class="material-icons" style="color:#3498db;">contact_mail</span><span class="contact-popover-title">Datos de Contacto</span></div>
+                                <div class="contact-detail-row"><span class="material-icons">account_circle</span><strong>${nombreMostrar}</strong></div>
+                                <div class="contact-detail-row"><span class="material-icons">email</span><span>${correoContacto}</span></div>
+                                <a href="https://api.whatsapp.com/send?phone=527821082583&text=Hola%20${encodeURIComponent(nombreMostrar)},%20me%20interesa%20tu%20servicio%20de%20${encodeURIComponent(p.nombreServicio)}%20en%20REBOOP." target="_blank" class="btn-whatsapp-connect" style="background-color:#3498db;">
+                                    <span class="material-icons" style="font-size:16px;color:white;">chat</span> Agendar Servicio
+                                </a>
+                            </div>
+                        </div>
+                        <div class="post-body">
+                            <div class="post-title" style="color:#3498db;">[SERVICIO] ${p.nombreServicio}</div>
+                            <p class="post-desc">${p.descripcion}</p>
+                            <div class="post-specs-container" style="border-left-color:#3498db;">
+                                <div class="spec-pill">Categoría: <strong>${p.categoriaServicio}</strong></div>
+                                <div class="spec-pill">Modalidad: <strong>${p.modalidad}</strong></div>
+                                <div class="spec-pill">Horarios: <strong>${p.horarios}</strong></div>
+                                ${p.certificaciones ? `<div class="spec-pill">Validación: <strong>${p.certificaciones}</strong></div>` : ''}
+                            </div>
+                        </div>
+                        ${srvImgHTML}
+                        <div class="post-footer">
+                            <div class="post-price" style="color:#3498db;">Costo base: $${p.tarifa} MXN</div>
+                            <div class="post-badge-eco" style="border:1px solid #3498db; color:#3498db;">Soporte Técnico Calificado</div>
+                        </div>
+                    </div>`;
+            }
+ 
+            let ecoColor = p.riesgoAmbiental === 'Alto' ? '#e74c3c' : (p.riesgoAmbiental === 'Medio' ? '#f1c40f' : '#2ecc71');
+            let specsHTML = '';
+            if (p.marca || p.modelo || p.ram || p.procesador || p.almacenamiento || p.sistemaOperativo) {
+                specsHTML = `<div class="post-specs-container">
+                    ${p.marca ? `<div class="spec-pill">Marca: <strong>${p.marca}</strong></div>` : ''}
+                    ${p.modelo ? `<div class="spec-pill">Modelo: <strong>${p.modelo}</strong></div>` : ''}
+                    ${p.ram ? `<div class="spec-pill">RAM: <strong>${p.ram}</strong></div>` : ''}
+                    ${p.procesador ? `<div class="spec-pill">CPU: <strong>${p.procesador}</strong></div>` : ''}
+                    ${p.almacenamiento ? `<div class="spec-pill">Disco: <strong>${p.almacenamiento}</strong></div>` : ''}
+                    ${p.sistemaOperativo ? `<div class="spec-pill">S.O: <strong>${p.sistemaOperativo}</strong></div>` : ''}
+                </div>`;
+            }
+ 
+            return `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-avatar-wrap" onclick="alternarPopoverContacto('${idPopover}')">${avatarHTML}</div>
+                        <div class="post-author-info">
+                            <span class="post-author-name" onclick="alternarPopoverContacto('${idPopover}')">${nombreMostrar}</span>
+                            <span class="post-meta-date">Publicado: ${fecha} • Lugar: ${p.ubicacion}</span>
+                        </div>
+                        <div class="contact-popover" id="${idPopover}">
+                            <div class="contact-popover-header"><span class="material-icons" style="color:#2ecc71;">contact_mail</span><span class="contact-popover-title">Contacto</span></div>
+                            <div class="contact-detail-row"><span class="material-icons">account_circle</span><strong>${nombreMostrar}</strong></div>
+                            <div class="contact-detail-row"><span class="material-icons">email</span><span>${correoContacto}</span></div>
+                            <a href="https://api.whatsapp.com/send?phone=527821082583&text=Interesado%20en%20${encodeURIComponent(p.titulo)}" target="_blank" class="btn-whatsapp-connect">
+                                <span class="material-icons" style="font-size:16px;color:white;">chat</span> WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        <div class="post-title">${p.titulo}</div>
+                        <p class="post-desc">${p.descripcion}</p>
+                        ${specsHTML}
+                    </div>
+                    <div class="post-gallery">${(p.imagenes || []).map(img => `<img src="${img}" class="post-img" onclick="window.open('${img}', '_blank')">`).join('')}</div>
+                    <div class="post-footer">
+                        <div class="post-price">Precio: $${p.precio} MXN</div>
+                        <div class="post-badge-eco" style="border:1px solid ${ecoColor}; color:${ecoColor};">Riesgo Ambiental: ${p.riesgoAmbiental || 'Bajo'}</div>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch (err) {
+        contenedor.innerHTML = '<p>Error al procesar el Muro.</p>';
+    }
+}
+ 
+// ══════════════════════════════════════════
+// MIS PUBLICACIONES — COMPLETAS CON OCULTAR/ELIMINAR
+// ══════════════════════════════════════════
+async function cargarMisPublicaciones() {
+    const contenedor = document.getElementById('contenedor-mis-publicaciones');
+    const miCorreo   = localStorage.getItem('user_correo');
+    try {
+        const res        = await fetch('/api/inicio-feed');
+        const totalItems = await res.json();
+        const filtrado   = totalItems.filter(p =>
+            (p.correoVendedor || p.correoProveedor || '').toLowerCase().trim() === miCorreo.toLowerCase().trim()
+        );
+ 
+        if (filtrado.length === 0) {
+            contenedor.innerHTML = '<p style="color:#7f8c8d; text-align:center; padding:20px;">Aún no posees aportaciones.</p>';
+            return;
+        }
+ 
+        contenedor.innerHTML = filtrado.map((p, index) => {
+            const esServicio     = p.tipoElemento === 'servicio';
+            const colorIzq       = esServicio ? '#3498db' : '#2ecc71';
+            const tituloMostrar  = esServicio ? p.nombreServicio : p.titulo;
+            const valorMostrar   = esServicio ? p.tarifa : p.precio;
+            const idPost         = p._id || `post-${index}`;
+            const fecha          = new Date(p.fechaPublicacion).toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+ 
+            // Specs completas para productos
+            let specsHTML = '';
+            if (!esServicio && (p.marca || p.modelo || p.ram || p.procesador || p.almacenamiento || p.sistemaOperativo)) {
+                specsHTML = `<div class="post-specs-container">
+                    ${p.marca           ? `<div class="spec-pill">Marca: <strong>${p.marca}</strong></div>` : ''}
+                    ${p.modelo          ? `<div class="spec-pill">Modelo: <strong>${p.modelo}</strong></div>` : ''}
+                    ${p.ram             ? `<div class="spec-pill">RAM: <strong>${p.ram}</strong></div>` : ''}
+                    ${p.procesador      ? `<div class="spec-pill">CPU: <strong>${p.procesador}</strong></div>` : ''}
+                    ${p.almacenamiento  ? `<div class="spec-pill">Disco: <strong>${p.almacenamiento}</strong></div>` : ''}
+                    ${p.sistemaOperativo? `<div class="spec-pill">S.O: <strong>${p.sistemaOperativo}</strong></div>` : ''}
+                </div>`;
+            }
+ 
+            // Specs completas para servicios
+            let specsServicioHTML = '';
+            if (esServicio) {
+                specsServicioHTML = `<div class="post-specs-container" style="border-left-color:#3498db;">
+                    <div class="spec-pill">Categoría: <strong>${p.categoriaServicio}</strong></div>
+                    <div class="spec-pill">Modalidad: <strong>${p.modalidad}</strong></div>
+                    <div class="spec-pill">Horarios: <strong>${p.horarios}</strong></div>
+                    ${p.certificaciones ? `<div class="spec-pill">Validación: <strong>${p.certificaciones}</strong></div>` : ''}
+                </div>`;
+            }
+ 
+            // Galería de imágenes
+            let galeriaHTML = '';
+            if (!esServicio && p.imagenes && p.imagenes.length > 0) {
+                galeriaHTML = `<div class="post-gallery">${p.imagenes.map(img => `<img src="${img}" class="post-img" onclick="window.open('${img}', '_blank')">`).join('')}</div>`;
+            } else if (esServicio && p.imagenServicio) {
+                galeriaHTML = `<div class="post-gallery"><img src="${p.imagenServicio}" class="post-img" onclick="window.open('${p.imagenServicio}', '_blank')"></div>`;
+            }
+ 
+            // Datos ecológicos
+            let ecoHTML = '';
+            if (!esServicio && (p.contieneBateria || p.materialPredominante || p.riesgoAmbiental || p.pesoAproximado)) {
+                const ecoColor = p.riesgoAmbiental === 'Alto' ? '#e74c3c' : (p.riesgoAmbiental === 'Medio' ? '#f1c40f' : '#2ecc71');
+                ecoHTML = `<div style="margin:10px 0; padding:10px 15px; background:#0f141c; border-radius:8px; border-left:4px solid #2ecc71; display:flex; flex-wrap:wrap; gap:12px;">
+                    ${p.contieneBateria       ? `<span style="font-size:0.82rem; color:#b2bec3;">🔋 Batería: <strong>${p.contieneBateria}</strong></span>` : ''}
+                    ${p.materialPredominante  ? `<span style="font-size:0.82rem; color:#b2bec3;">🧱 Material: <strong>${p.materialPredominante}</strong></span>` : ''}
+                    ${p.riesgoAmbiental       ? `<span style="font-size:0.82rem; color:${ecoColor};">⚠️ Riesgo: <strong>${p.riesgoAmbiental}</strong></span>` : ''}
+                    ${p.pesoAproximado        ? `<span style="font-size:0.82rem; color:#b2bec3;">⚖️ Peso: <strong>${p.pesoAproximado}</strong></span>` : ''}
+                </div>`;
+            }
+ 
+            return `
+                <div class="post-card" id="card-${idPost}" style="border-left:5px solid ${colorIzq};">
+                    <div class="post-header">
+                        <div class="post-author-info" style="flex:1;">
+                            <div class="post-title" style="color:${colorIzq}; font-size:1.2rem; margin-bottom:0;">${tituloMostrar}</div>
+                            <span class="post-meta-date">Publicado: ${fecha} • ${p.ubicacion || 'Poza Rica'} • ${esServicio ? 'Servicio' : p.categoria || 'Producto'}</span>
+                        </div>
+                        <!-- BOTONES OCULTAR / ELIMINAR EN ESQUINA -->
+                        <div class="post-acciones-propias">
+                            <button class="btn-accion-post btn-ocultar-post" onclick="ocultarPublicacion('${idPost}', '${p.tipoElemento}')">
+                                <span class="material-icons" style="font-size:14px;">visibility_off</span> Ocultar
+                            </button>
+                            <button class="btn-accion-post btn-eliminar-post" onclick="eliminarPublicacion('${idPost}', '${p.tipoElemento}')">
+                                <span class="material-icons" style="font-size:14px;">delete</span> Eliminar
+                            </button>
+                        </div>
+                    </div>
+ 
+                    <div id="body-${idPost}" class="post-body">
+                        <p class="post-desc">${p.descripcion}</p>
+                        ${specsHTML}
+                        ${specsServicioHTML}
+                        ${ecoHTML}
+                    </div>
+ 
+                    ${galeriaHTML}
+ 
+                    <div class="post-footer">
+                        <div class="post-price" style="color:${esServicio ? '#3498db' : '#f1c40f'};">
+                            ${esServicio ? 'Tarifa base' : 'Precio'}: $${valorMostrar} MXN
+                        </div>
+                        <div class="post-badge-eco" style="text-transform:uppercase; color:#7f8c8d; border:1px solid #2c3e50;">
+                            ${p.estado || (esServicio ? p.modalidad : '')}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+ 
+    } catch {
+        contenedor.innerHTML = '<p>Error de carga.</p>';
+    }
+}
+ 
+// ══════════════════════════════════════════
+// OCULTAR PUBLICACIÓN (en BD y en muro)
+// ══════════════════════════════════════════
+async function ocultarPublicacion(idPost, tipoElemento) {
+    const ruta = tipoElemento === 'servicio' ? '/api/ocultar-servicio' : '/api/ocultar-producto';
+    try {
+        const res  = await fetch(ruta, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: idPost, correo: localStorage.getItem('user_correo') })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            const card    = document.getElementById(`card-${idPost}`);
+            const body    = document.getElementById(`body-${idPost}`);
+            const btnOcul = card.querySelector('.btn-ocultar-post');
+            const yaOculto = card.querySelector('.post-oculto-overlay');
+            if (data.activo) {
+                // Volver a mostrar
+                if (yaOculto) yaOculto.remove();
+                if (body) body.style.display = 'block';
+                card.querySelectorAll('.post-gallery').forEach(g => g.style.display = '');
+                btnOcul.innerHTML = '<span class="material-icons" style="font-size:14px;">visibility_off</span> Ocultar';
+            } else {
+                // Ocultar
+                if (body) body.style.display = 'none';
+                card.querySelectorAll('.post-gallery').forEach(g => g.style.display = 'none');
+                const overlay = document.createElement('div');
+                overlay.className = 'post-oculto-overlay';
+                overlay.innerHTML = 'Publicación oculta. Haz clic en "Mostrar" para reactivarla.';
+                card.querySelector('.post-footer').before(overlay);
+                btnOcul.innerHTML = '<span class="material-icons" style="font-size:14px;">visibility</span> Mostrar';
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch {
+        alert('Error de conexión al ocultar.');
+    }
+}
+ 
+// ══════════════════════════════════════════
+// ELIMINAR PUBLICACIÓN (de BD y del muro)
+// ══════════════════════════════════════════
+async function eliminarPublicacion(idPost, tipoElemento) {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.')) return;
+    const ruta = tipoElemento === 'servicio' ? '/api/eliminar-servicio' : '/api/eliminar-producto';
+    try {
+        const res  = await fetch(ruta, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: idPost, correo: localStorage.getItem('user_correo') })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            const card = document.getElementById(`card-${idPost}`);
+            if (card) {
+                card.style.transition = 'opacity 0.4s, transform 0.4s';
+                card.style.opacity    = '0';
+                card.style.transform  = 'translateX(-20px)';
+                setTimeout(() => card.remove(), 400);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch {
+        alert('Error de conexión al eliminar.');
+    }
+}
+ 
+// ══════════════════════════════════════════
+// SERVICIO TÉCNICO
+// ══════════════════════════════════════════
+let srvImagenBase64 = "";
+document.getElementById('input-imagen-servicio').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onloadend = () => srvImagenBase64 = r.result;
+    r.readAsDataURL(file);
+});
+ 
+document.getElementById('form-servicio-tecnico').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const correo = localStorage.getItem('user_correo');
+    const srvPayload = {
+        correo,
+        nombreServicio:    document.getElementById('srv-nombre').value.trim(),
+        categoriaServicio: document.getElementById('srv-categoria').value,
+        modalidad:         document.getElementById('srv-modalidad').value,
+        tarifa:            document.getElementById('srv-tarifa').value,
+        horarios:          document.getElementById('srv-horarios').value.trim(),
+        certificaciones:   document.getElementById('srv-certificaciones').value.trim(),
+        descripcion:       document.getElementById('srv-descripcion').value.trim(),
+        imagenServicio:    srvImagenBase64,
+        ubicacion:         "Poza Rica - Campus UV"
+    };
+    try {
+        const res = await fetch('/api/publicar-servicio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(srvPayload)
+        });
+        if (res.ok) {
+            alert('¡Servicio técnico publicado con éxito en REBOOP!');
+            document.getElementById('form-servicio-tecnico').reset();
+            srvImagenBase64 = "";
+            irATab('inicio');
+        } else {
+            const data = await res.json();
+            alert(data.error);
+        }
+    } catch { alert('Error de red.'); }
+});
+ 
+// ══════════════════════════════════════════
+// RENDERIZAR DATOS USUARIO
+// ══════════════════════════════════════════
+function renderizarDatosUsuario() {
+    const nombre       = localStorage.getItem('user_nombre')       || 'Usuario';
+    const apellido     = localStorage.getItem('user_apellido')     || '';
+    const correo       = localStorage.getItem('user_correo')       || '';
+    const telefono     = localStorage.getItem('user_telefono')     || '';
+    const ciudad       = localStorage.getItem('user_ciudad')       || '';
+    const fecha        = localStorage.getItem('user_fecha')        || '';
+    const rol          = localStorage.getItem('user_rol')          || 'usuario';
+    const foto         = localStorage.getItem('user_foto')         || '';
+    const presentacion = localStorage.getItem('user_presentacion') || '';
+ 
+    if (document.getElementById('lbl-nombre'))    document.getElementById('lbl-nombre').textContent    = nombre;
+    if (document.getElementById('lbl-apellido'))  document.getElementById('lbl-apellido').textContent  = apellido;
+    if (document.getElementById('lbl-fecha'))     document.getElementById('lbl-fecha').textContent     = fecha;
+    if (document.getElementById('lbl-telefono'))  document.getElementById('lbl-telefono').textContent  = telefono;
+    if (document.getElementById('lbl-ciudad'))    document.getElementById('lbl-ciudad').textContent    = ciudad;
+    if (document.getElementById('lbl-correo'))    document.getElementById('lbl-correo').textContent    = correo;
+    if (document.getElementById('lbl-rol'))       document.getElementById('lbl-rol').textContent       = rol;
+ 
+    if (foto) {
+        document.getElementById('foto-placeholder').style.display = 'none';
+        document.getElementById('foto-perfil-img').src            = foto;
+        document.getElementById('foto-perfil-img').style.display  = 'block';
+    }
+    if (presentacion) document.getElementById('lbl-presentacion').textContent = presentacion;
+}
+ 
+// ══════════════════════════════════════════
+// FOTO DE PERFIL
+// ══════════════════════════════════════════
+document.getElementById('input-foto').addEventListener('change', async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const formData = new FormData();
+    formData.append('foto', archivo);
+    formData.append('correo', localStorage.getItem('user_correo'));
+    const res  = await fetch('/api/subir-foto', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (res.ok) {
+        localStorage.setItem('user_foto', data.urlFoto);
+        renderizarDatosUsuario();
+        cargarMuroFeed();
+    }
+});
+ 
+// ══════════════════════════════════════════
+// EDITAR PERFIL
+// ══════════════════════════════════════════
+document.getElementById('btn-activar-edicion').addEventListener('click', () => {
+    document.getElementById('edit-nombre').value   = localStorage.getItem('user_nombre')   || '';
+    document.getElementById('edit-apellido').value = localStorage.getItem('user_apellido') || '';
+    document.getElementById('edit-telefono').value = localStorage.getItem('user_telefono') || '';
+    document.getElementById('edit-ciudad').value   = localStorage.getItem('user_ciudad')   || '';
+    document.getElementById('lbl-fecha-readonly').textContent  = localStorage.getItem('user_fecha')  || '';
+    document.getElementById('lbl-correo-readonly').textContent = localStorage.getItem('user_correo') || '';
+    document.getElementById('modo-vista').style.display   = 'none';
+    document.getElementById('modo-edicion').style.display = 'block';
+});
+ 
+document.getElementById('btn-cancelar-edicion').addEventListener('click', () => {
+    document.getElementById('modo-edicion').style.display = 'none';
+    document.getElementById('modo-vista').style.display   = 'block';
+});
+ 
+document.getElementById('btn-guardar-perfil').addEventListener('click', async () => {
+    const correo       = localStorage.getItem('user_correo');
+    const nombre       = document.getElementById('edit-nombre').value.trim();
+    const apellido     = document.getElementById('edit-apellido').value.trim();
+    const telefono     = document.getElementById('edit-telefono').value.trim();
+    const ciudad       = document.getElementById('edit-ciudad').value.trim();
+    const presentacion = localStorage.getItem('user_presentacion') || '';
+    if (!nombre || !apellido) { alert('El nombre y apellido son obligatorios.'); return; }
+    try {
+        const res  = await fetch('/api/editar-perfil', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo, nombre, apellido, telefono, ciudad, presentacion })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('user_nombre',   data.nombre);
+            localStorage.setItem('user_apellido', data.apellido);
+            localStorage.setItem('user_telefono', data.telefono);
+            localStorage.setItem('user_ciudad',   data.ciudad);
+            renderizarDatosUsuario();
+            document.getElementById('modo-edicion').style.display = 'none';
+            document.getElementById('modo-vista').style.display   = 'block';
+        } else { alert('Error: ' + data.error); }
+    } catch { alert('Error de conexión.'); }
+});
+ 
+document.getElementById('btn-editar-presentacion').addEventListener('click', () => {
+    document.getElementById('edit-presentacion').value            = localStorage.getItem('user_presentacion') || '';
+    document.getElementById('vista-presentacion').style.display   = 'none';
+    document.getElementById('edicion-presentacion').style.display = 'block';
+});
+ 
+document.getElementById('btn-cancelar-presentacion').addEventListener('click', () => {
+    document.getElementById('edicion-presentacion').style.display = 'none';
+    document.getElementById('vista-presentacion').style.display   = 'block';
+});
+ 
+document.getElementById('btn-guardar-presentacion').addEventListener('click', async () => {
+    const correo       = localStorage.getItem('user_correo');
+    const nombre       = localStorage.getItem('user_nombre')   || '';
+    const apellido     = localStorage.getItem('user_apellido') || '';
+    const telefono     = localStorage.getItem('user_telefono') || '';
+    const ciudad       = localStorage.getItem('user_ciudad')   || '';
+    const presentacion = document.getElementById('edit-presentacion').value.trim();
+    try {
+        const res  = await fetch('/api/editar-perfil', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo, nombre, apellido, telefono, ciudad, presentacion })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('user_presentacion', presentacion);
+            document.getElementById('lbl-presentacion').textContent   = presentacion || 'Sin presentación aún.';
+            document.getElementById('edicion-presentacion').style.display = 'none';
+            document.getElementById('vista-presentacion').style.display   = 'block';
+        } else { alert('Error: ' + data.error); }
+    } catch { alert('Error de conexión.'); }
+});
+ 
+// ══════════════════════════════════════════
+// MEMBRESÍA
+// ══════════════════════════════════════════
+async function verificarMembresia() {
+    const correo = localStorage.getItem('user_correo');
+    const res    = await fetch('/api/verificar-membresia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo })
+    });
+    const data = await res.json();
+    document.getElementById('card-cargando').style.display = 'none';
+ 
+    if (data.beneficiosGanados) {
+        document.getElementById('lista-beneficios').innerHTML =
+            data.beneficiosGanados.map(b => `<li><span class="material-icons" style="color:#2ecc71;font-size:1.2rem;">check_circle</span>${b}</li>`).join('');
+    }
+ 
+    if (data.membresia) {
+        document.getElementById('card-activa').style.display       = 'block';
+        document.getElementById('card-inactiva').style.display     = 'none';
+        document.getElementById('dias-restantes').textContent      = `${data.diasRestantes} días`;
+        document.getElementById('fecha-vence').textContent         = data.fechaVencimiento;
+        document.getElementById('subir-bloqueado').style.display   = 'none';
+        document.getElementById('subir-desbloqueado').style.display = 'block';
+        document.getElementById('servicios-bloqueado').style.display   = 'none';
+        document.getElementById('servicios-desbloqueado').style.display = 'block';
+    } else {
+        document.getElementById('card-inactiva').style.display     = 'block';
+        document.getElementById('card-activa').style.display       = 'none';
+        document.getElementById('subir-bloqueado').style.display   = 'block';
+        document.getElementById('subir-desbloqueado').style.display = 'none';
+        document.getElementById('servicios-bloqueado').style.display   = 'block';
+        document.getElementById('servicios-desbloqueado').style.display = 'none';
+    }
+}
+ 
+document.getElementById('btn-pagar').addEventListener('click', async () => {
+    const correo = localStorage.getItem('user_correo');
+    const btn    = document.getElementById('btn-pagar');
+    btn.textContent = 'Generando enlace...';
+    btn.disabled    = true;
+    try {
+        const res  = await fetch('/api/crear-pago', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo })
+        });
+        const data = await res.json();
+        if (data.url) window.open(data.url, '_blank');
+        else alert("Error al generar el pago.");
+    } catch { alert("Error de conexión con Mercado Pago."); }
+    btn.textContent = '💳 Pagar / Renovar con Mercado Pago';
+    btn.disabled    = false;
+});
+ 
+// ══════════════════════════════════════════
+// GPS Y RELOJ
+// ══════════════════════════════════════════
+function activarGeolocalizacionYHora() {
+    setInterval(() => {
+        if (document.getElementById('lbl-hora-local'))
+            document.getElementById('lbl-hora-local').textContent = new Date().toLocaleString('es-MX', { hour12: true });
+    }, 1000);
+    document.getElementById('lbl-ubicacion-gps').textContent = "Poza Rica de Hidalgo, Veracruz";
+}
+ 
+// ══════════════════════════════════════════
+// FORMULARIO PRODUCTO
+// ══════════════════════════════════════════
+let archivosSeleccionados = [];
+ 
+function previsualizarImagenes(event) {
+    const cont   = document.getElementById('preview-imagenes');
+    cont.innerHTML = '';
+    archivosSeleccionados = Array.from(event.target.files);
+    archivosSeleccionados.forEach((f, idx) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            cont.innerHTML += `
+                <div class="preview-img-wrap">
+                    <img src="${e.target.result}">
+                    <button type="button" class="btn-remove" onclick="eliminarImagen(${idx})">×</button>
+                </div>`;
+        };
+        reader.readAsDataURL(f);
+    });
+}
+ 
+function eliminarImagen(idx) {
+    archivosSeleccionados.splice(idx, 1);
+    const evt = { target: { files: archivosSeleccionados } };
+}
+ 
+document.getElementById('prod-descripcion')?.addEventListener('input', function () {
+    document.getElementById('contador-desc').textContent = `${this.value.length} / 600`;
+});
+ 
+const subcategorias = {
+    'Computadoras':               ['Laptop','PC de escritorio','Mini PC','All in One'],
+    'Celulares y tablets':        ['Smartphone','Tablet','Smartwatch'],
+    'Componentes electrónicos':   ['RAM','Disco duro','Tarjeta madre','Procesador','Fuente de poder'],
+    'Redes y telecomunicaciones': ['Router','Switch','Módem','Access Point'],
+    'Audio y video':              ['Pantalla','Bocinas','Televisión','Proyector'],
+    'Energía y baterías':         ['Baterías','UPS','Cargadores'],
+    'Cables y accesorios':        ['HDMI','USB','Adaptadores','Teclados','Mouse']
+};
+ 
+function actualizarSubcategoria() {
+    const cat    = document.getElementById('prod-categoria').value;
+    const subSel = document.getElementById('prod-subcategoria');
+    subSel.innerHTML = '<option value="">Selecciona subcategoría</option>';
+    (subcategorias[cat] || []).forEach(s => { subSel.options.add(new Option(s, s)); });
+    document.getElementById('bloque-tecnico').style.display = 'none';
+    document.getElementById('campos-tecnicos').innerHTML    = '';
+}
+ 
+function actualizarCamposTecnicos() {
+    const cont = document.getElementById('campos-tecnicos');
+    cont.innerHTML = `
+        <div style="flex:1; min-width:200px;"><label class="form-label">Marca</label><input type="text" name="marca" class="input-box" placeholder="Ej. HP, Dell, Lenovo"></div>
+        <div style="flex:1; min-width:200px;"><label class="form-label">Modelo</label><input type="text" name="modelo" class="input-box" placeholder="Ej. EliteBook 840 G5"></div>
+        <div style="flex:1; min-width:200px;"><label class="form-label">RAM</label><input type="text" name="ram" class="input-box" placeholder="Ej. 8 GB DDR4"></div>
+        <div style="flex:1; min-width:200px;"><label class="form-label">Procesador</label><input type="text" name="procesador" class="input-box" placeholder="Ej. Intel Core i5-8250U"></div>
+        <div style="flex:1; min-width:200px;"><label class="form-label">Almacenamiento</label><input type="text" name="almacenamiento" class="input-box" placeholder="Ej. SSD 256 GB"></div>
+        <div style="flex:1; min-width:200px;"><label class="form-label">Sistema Operativo</label><input type="text" name="sistemaOperativo" class="input-box" placeholder="Ej. Windows 10 Pro"></div>`;
+    document.getElementById('bloque-tecnico').style.display = 'block';
+}
+ 
+document.getElementById('form-producto')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const correo  = localStorage.getItem('user_correo');
+    const estado  = document.getElementById('txt-estado-publicar');
+    const btn     = document.getElementById('btn-publicar');
+ 
+    if (archivosSeleccionados.length === 0) {
+        estado.textContent = 'Debes subir al menos una imagen.';
+        estado.style.color = '#e74c3c';
+        return;
+    }
+ 
+    btn.disabled    = true;
+    btn.textContent = 'Publicando...';
+    estado.textContent = 'Subiendo imágenes...';
+    estado.style.color = '#f1c40f';
+ 
+    try {
+        const formData = new FormData(document.getElementById('form-producto'));
+        formData.set('correo', correo);
+        formData.delete('imagenes');
+        archivosSeleccionados.forEach(f => formData.append('imagenes', f));
+ 
+        const res  = await fetch('/api/publicar-producto', { method: 'POST', body: formData });
+        const data = await res.json();
+ 
+        if (res.ok) {
+            estado.textContent = '✅ ' + data.mensaje;
+            estado.style.color = '#2ecc71';
+            document.getElementById('form-producto').reset();
+            archivosSeleccionados = [];
+            document.getElementById('preview-imagenes').innerHTML   = '';
+            document.getElementById('bloque-tecnico').style.display = 'none';
+            document.getElementById('campos-tecnicos').innerHTML     = '';
+            document.getElementById('prod-subcategoria').innerHTML  = '<option value="">— Primero elige categoría —</option>';
+        } else {
+            estado.textContent = '❌ ' + data.error;
+            estado.style.color = '#e74c3c';
+        }
+    } catch {
+        estado.textContent = '❌ Error de conexión.';
+        estado.style.color = '#e74c3c';
+    }
+ 
+    btn.disabled    = false;
+    btn.textContent = '🚀 Publicar en el Mercado REBOOP';
+});
+// Renderizado mejorado
+function renderizarPostCard(p, esPerfil = false) {
+    const idPost = p._id;
+    const isOwner = (p.correoVendedor || p.correoProveedor) === localStorage.getItem('user_correo');
+    
+    return `
+        <div class="post-card" id="card-${idPost}" style="border-left: 5px solid ${p.activo ? '#2ecc71' : '#7f8c8d'}; opacity: ${p.activo ? '1' : '0.6'}">
+            
+            <div class="post-acciones-propias">
+                <span class="material-icons" onclick="toggleMenu('${idPost}')" style="cursor:pointer; color:#7f8c8d;">more_vert</span>
+                <div id="menu-${idPost}" class="dropdown-content" style="display:none; position:absolute; right:0; background:#0f141c; border:1px solid #2c3e50; padding:10px; z-index:99; border-radius:8px;">
+                    ${isOwner ? `
+                        <button onclick="toggleVisibilidad('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#fff; cursor:pointer;">
+                            ${p.activo ? '🙈 Ocultar' : '👁️ Mostrar'}
+                        </button><br>
+                        <button onclick="eliminarPublicacion('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;">🗑️ Eliminar</button>
+                    ` : `
+                        <button onclick="compartir('${idPost}')" style="background:none; border:none; color:#3498db; cursor:pointer;">🔁 Compartir</button>
+                    `}
+                </div>
+            </div>
+
+            <div class="post-body">
+                <div class="post-title">${p.titulo || p.nombreServicio}</div>
+                <p class="post-desc">${p.descripcion}</p>
+                <div class="post-footer">
+                    <button onclick="darLike('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#e74c3c; cursor:pointer;">❤️ Like (${p.likes?.length || 0})</button>
+                    <button onclick="guardar('${idPost}', '${p.tipoElemento}')" style="background:none; border:none; color:#f1c40f; cursor:pointer;">🔖 Guardar</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+// Lógica de Ocultar/Mostrar sin borrar
+async function toggleVisibilidad(id, tipo) {
+    const res = await fetch('/api/toggle-visibilidad', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id, tipo })
+    });
+    const data = await res.json();
+    alert('Publicación ahora está: ' + data.mensaje);
+    if (document.getElementById('sec-perfil').classList.contains('active')) cargarMisPublicaciones();
+    else cargarMuroFeed();
+}
+
+function toggleMenu(id) {
+    const menu = document.getElementById(`menu-${id}`);
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+ 
+// ══════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════
+function irATab(nombre) {
+    menuItems.forEach(i => i.classList.remove('active'));
+    sections.forEach(s  => s.classList.remove('active'));
+    const tab = Array.from(menuItems).find(i => i.getAttribute('data-tab') === nombre);
+    if (tab) tab.classList.add('active');
+    document.getElementById(`sec-${nombre}`).classList.add('active');
+    if (nombre === 'inicio')    cargarMuroFeed();
+    if (nombre === 'perfil')    { renderizarDatosUsuario(); cargarMisPublicaciones(); }
+    if (nombre === 'membresia') verificarMembresia();
+}
+ 
+const menuItems = document.querySelectorAll('.menu-item');
+const sections  = document.querySelectorAll('.tab-section');
+menuItems.forEach(item => { item.addEventListener('click', () => irATab(item.getAttribute('data-tab'))); });
+document.getElementById('btn-cerrar-sesion').addEventListener('click', () => localStorage.clear());
+ 
+window.addEventListener('DOMContentLoaded', () => {
+    renderizarDatosUsuario();
+    verificarMembresia();
+    activarGeolocalizacionYHora();
+    cargarMuroFeed();
+});
+</script>
+</body>
+</html>
+ 

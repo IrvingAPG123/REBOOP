@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REBOOP - Confirmar Cuenta</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .code-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 25px 0;
+        }
+        .code-input {
+            width: 50px;
+            height: 60px;
+            background-color: #0f141c;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            color: #2ecc71;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            outline: none;
+            transition: 0.3s;
+        }
+        .code-input:focus {
+            border-color: #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="alerta-custom" class="alerta-oculta">
+        <span id="alerta-mensaje"></span>
+    </div>
+
+    <div class="login-container" style="position: relative;">
+        
+        <a href="/login" class="btn-regresar" title="Volver al Login">
+            <span class="material-icons">arrow_back</span>
+        </a>
+
+        <div class="login-header">
+            <h1>REBOOP</h1>
+            <p>Verificación de Seguridad</p>
+            <span style="color: #f1c40f;">Ingresa el código enviado a tu correo</span>
+        </div>
+
+        <form class="login-form" id="form-confirmar" autocomplete="off">
+            <p style="color: #b2bec3; font-size: 0.9rem; text-align: center; line-height: 1.5;">
+                Hemos enviado un código numérico de 5 dígitos al correo: <br>
+                <strong id="txt-correo-destino" style="color: #ffffff;"></strong>
+            </p>
+
+            <div class="code-container">
+                <input type="text" class="code-input" maxlength="1" required pattern="\d">
+                <input type="text" class="code-input" maxlength="1" required pattern="\d">
+                <input type="text" class="code-input" maxlength="1" required pattern="\d">
+                <input type="text" class="code-input" maxlength="1" required pattern="\d">
+                <input type="text" class="code-input" maxlength="1" required pattern="\d">
+            </div>
+
+            <button type="submit" class="btn-login">Verificar y Activar Cuenta</button>
+        </form>
+
+        <div class="login-footer">
+            <p style="color: #7f8c8d; font-size: 0.8rem;">¿No recibiste el código? Revisa tu carpeta de correo no deseado (Spam).</p>
+        </div>
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll('.code-input');
+        const formConfirmar = document.getElementById('form-confirmar');
+        const alertaCustom = document.getElementById('alerta-custom');
+        const alertaMensaje = document.getElementById('alerta-mensaje');
+
+        const correoUsuario = localStorage.getItem('correo_verificacion') || '';
+        document.getElementById('txt-correo-destino').textContent = correoUsuario;
+
+        function mostrarAlerta(msg, tipo) {
+            alertaMensaje.textContent = msg;
+            alertaCustom.className = `alerta-visible ${tipo}`;
+            setTimeout(() => { alertaCustom.className = 'alerta-oculta'; }, 4000);
+        }
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '');
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        formConfirmar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let codigoCompleto = '';
+            inputs.forEach(input => codigoCompleto += input.value);
+
+            try {
+                const respuesta = await fetch('/api/confirmar-cuenta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: correoUsuario, codigo: codigoCompleto })
+                });
+                const resultado = await respuesta.json();
+
+                if (respuesta.ok) {
+                    mostrarAlerta("¡Cuenta confirmada con éxito!", "exito");
+                    localStorage.removeItem('correo_verificacion');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    mostrarAlerta(resultado.error, "error");
+                }
+            } catch (err) {
+                mostrarAlerta("Error al validar el token con el servidor.", "error");
+            }
+        });
+    </script>
+</body>
+</html>

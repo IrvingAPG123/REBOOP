@@ -1,0 +1,237 @@
+/* ==========================================
+   1. CONFIGURACIÓN GENERAL Y COLORES BASE
+   ========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #121824; /* Gris oscuro tecnológico */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px; /* Evita que la tarjeta pegue a las orillas en celulares */
+}
+
+/* ==========================================
+   2. CONTENEDOR RESPONSIVO (PC Y CELULAR)
+   ========================================== */
+.login-container {
+    background-color: #1a2333; /* Fondo de la tarjeta */
+    width: 100%;
+    max-width: 420px; /* En PC se queda centrado, en celular se adapta al ancho */
+    border-radius: 12px;
+    padding: 40px 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border-top: 5px solid #2ecc71; /* Línea verde de Economía Circular */
+}
+
+/* ==========================================
+   3. ENCABEZADO DE REBOOP
+   ========================================== */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    color: #2ecc71;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+}
+
+.login-header p {
+    color: #ffffff;
+    font-size: 1rem;
+    margin-top: 5px;
+}
+
+.login-header span {
+    color: #7f8c8d;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 5px;
+}
+
+/* ==========================================
+   4. FORMULARIO E INPUTS
+   ========================================== */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    color: #ecf0f1;
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    background-color: #0f141c;
+    border: 1px solid #34495e;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+/* Efecto cuando el usuario da clic para escribir */
+.input-group input:focus {
+    border-color: #2ecc71;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.2);
+}
+
+/* ==========================================
+   5. BOTÓN DE INGRESO
+   ========================================== */
+.btn-login {
+    background-color: #2ecc71;
+    color: #121824;
+    border: none;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background-color: #27ae60;
+    transform: translateY(-1px);
+}
+
+/* Contenedor relativo de contraseña */
+.password-wrapper {
+    position: relative; /* ANCLAJE: Mantiene al ojo dentro del input */
+    width: 100%;        
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 45px; /* Evita que las letras pasen por debajo del ojo */
+}
+
+/* ==========================================
+   6. FOOTER DEL FORMULARIO
+   ========================================== */
+.login-footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.9rem;
+}
+
+.login-footer a {
+    color: #2ecc71;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.membresia-nota {
+    color: #e74c3c;
+    font-size: 0.75rem;
+    margin-top: 15px;
+}
+
+/* ==========================================
+   7. CONTROL DEL ICONO DEL OJO (GOOGLE ICONS)
+   ========================================== */
+.toggle-password {
+    position: absolute;
+    right: 14px;         /* Centrado perfectamente a la derecha interna */
+    color: #7f8c8d;      /* Tono grisáceo discreto */
+    font-size: 20px;     
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.toggle-password:hover {
+    color: #2ecc71;       /* Brillo verde REBOOP al pasar el cursor */
+    transform: scale(1.1);
+}
+
+/* ==========================================
+   8. ALERTAS PERSONALIZADAS PREMIUM
+   ========================================== */
+.alerta-oculta {
+    position: fixed;
+    top: -100px; /* Escondida arriba en el techo del navegador */
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.4s ease-in-out;
+    opacity: 0;
+    z-index: 1000;
+}
+
+.alerta-visible {
+    position: fixed;
+    top: 25px; /* Baja elegantemente con animación animada */
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease-in-out;
+    opacity: 1;
+    z-index: 1000;
+    text-align: center;
+    min-width: 300px;
+}
+
+/* Variaciones de color según la respuesta */
+.error {
+    background-color: #e74c3c; /* Rojo elegante de alerta */
+    border-left: 5px solid #c0392b;
+}
+
+.exito {
+    background-color: #2ecc71; /* Verde de la plataforma */
+    border-left: 5px solid #27ae60;
+}
+/* ==========================================
+   9. BOTÓN FLOTANTE DE REGRESAR
+   ========================================== */
+.btn-regresar {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    color: #7f8c8d; /* Color gris suave */
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s, transform 0.2s;
+    z-index: 10;
+}
+
+.btn-regresar:hover {
+    color: #2ecc71; /* Se vuelve verde REBOOP al pasar el cursor */
+    transform: translateX(-3px); /* Pequeña animación fluida hacia la izquierda */
+}
+.post-options { position: absolute; top: 10px; right: 10px; z-index: 10; }
+.btn-manage { background: rgba(0,0,0,0.5); border: 1px solid #7f8c8d; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; margin-left: 5px; }
+.btn-manage:hover { background: #e74c3c; border-color: #e74c3c; }
