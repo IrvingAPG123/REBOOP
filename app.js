@@ -174,9 +174,16 @@ try {
 // ==========================================
 const transportador = nodemailer.createTransport({
     service: 'gmail',
-    auth: { user: 'eciap.perez.s4712.4@gmail.com', pass: 'kcmazgisxapyhxgy' }
+    // AGREGA ESTA LÍNEA:
+    socketTimeout: 10000, 
+    connectionTimeout: 10000,
+    // Obliga a usar IPv4:
+    family: 4, 
+    auth: { 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
+    }
 });
-
 // ==========================================
 // ☁️ CONEXIÓN DE BASE DE DATOS (MONGO ATLAS)
 // ==========================================
