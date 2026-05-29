@@ -349,23 +349,21 @@ app.post('/api/registro', async (req, res) => {
             membresia: false, fechaMembresia: null, fotoPerfil: '', presentacion: ''
         }).save();
 
-        transportador.sendMail({
-            from: '"Ecosistema REBOOP ♻️" <eciap.perez.s4712.4@gmail.com>',
-            to: correoLimpio,
-            subject: '🔑 Código de confirmación - REBOOP',
-            html: `<div style="font-family:sans-serif;background:#1a2333;color:white;padding:30px;border-radius:10px;border-top:5px solid #2ecc71;">
-                <h1 style="color:#2ecc71;text-align:center;">REBOOP</h1>
-                <p>¡Hola <strong>${nombre}</strong>! Tu código de verificación obligatorio es:</p>
-                <div style="background:#0f141c;text-align:center;padding:15px;margin:20px 0;border-radius:6px;">
-                    <span style="font-size:2.5rem;font-weight:bold;letter-spacing:5px;color:#f1c40f;">${codigo}</span>
-                </div></div>`
-        }, (err) => { if (err) console.error("❌ Error al despachar email:", err); });
-
-        res.json({ mensaje: "Usuario registrado. Código enviado.", correo: correoLimpio });
-    } catch (err) {
-        res.status(500).json({ error: "Error interno en el proceso de registro." });
-    }
-});
+try {
+    const info = await transportador.sendMail({
+        from: '"REBOOP" <' + process.env.EMAIL_USER + '>',
+        to: correoLimpio,
+        subject: '🔑 Código de confirmación - REBOOP',
+        html: `...` // (Tu código HTML original)
+    });
+    console.log("✅ Correo enviado con éxito:", info.messageId);
+    res.json({ mensaje: "Usuario registrado. Código enviado.", correo: correoLimpio });
+} catch (err) {
+    console.error("❌ ERROR CRÍTICO EN NODEMAILER:", err);
+    // IMPORTANTE: Si falla el correo, borramos al usuario para que no se quede bloqueado
+    await Usuario.deleteOne({ correo: correoLimpio });
+    res.status(500).json({ error: "Error al enviar el código de verificación." });
+}
 
 // ==========================================
 // 🔑 API: CONFIRMAR CUENTA POR TOKEN
