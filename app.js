@@ -331,8 +331,7 @@ app.post('/api/registro', async (req, res) => {
         const { nombre, apellidoPaterno, apellidoMaterno, fechaNacimiento, telefono, ciudad, correo, password } = req.body;
         const correoLimpio = correo.toLowerCase().trim();
 
-        const todos = await Usuario.find({});
-        const existe = todos.find(u => (u.correo || '').toLowerCase().trim() === correoLimpio);
+        const existe = await Usuario.findOne({ correo: correoLimpio });
         if (existe) return res.status(400).json({ error: "El correo ya está registrado." });
 
         const codigo = Math.floor(10000 + Math.random() * 90000).toString();
@@ -342,49 +341,81 @@ app.post('/api/registro', async (req, res) => {
             nombre: nombre.trim(),
             apellido: `${apellidoPaterno.trim()} ${apellidoMaterno.trim()}`,
             fechaNacimiento: fechaNacimiento.trim(),
-            teléfono: telefono.trim(), ciudad: ciudad.trim(),
-            correo: correoLimpio, contraseña: password.trim(),
+            teléfono: telefono.trim(), 
+            ciudad: ciudad.trim(),
+            correo: correoLimpio, 
+            contraseña: password.trim(),
             rol: correoLimpio === CORREO_ADMIN ? 'administrador' : 'usuario',
-            cuentaConfirmada: false, tokenVerificacion: codigo,
-            membresia: false, fechaMembresia: null, fotoPerfil: '', presentacion: ''
+            cuentaConfirmada: false, 
+            tokenVerificacion: codigo,
+            membresia: false, 
+            fechaMembresia: null, 
+            fotoPerfil: '', 
+            presentacion: ''
         }).save();
 
-try {
-    const info = await transportador.sendMail({
-        from: '"REBOOP" <' + process.env.EMAIL_USER + '>',
-        to: correoLimpio,
-        subject: '🔑 Código de confirmación - REBOOP',
-        html: `...` // (Tu código HTML original)
-    });
-    console.log("✅ Correo enviado con éxito:", info.messageId);
-    res.json({ mensaje: "Usuario registrado. Código enviado.", correo: correoLimpio });
-} catch (err) {
-    console.error("❌ ERROR CRÍTICO EN NODEMAILER:", err);
-    // IMPORTANTE: Si falla el correo, borramos al usuario para que no se quede bloqueado
-    await Usuario.deleteOne({ correo: correoLimpio });
-    res.status(500).json({ error: "Error al enviar el código de verificación." });
-}
-
-// ==========================================
-// 🔑 API: CONFIRMAR CUENTA POR TOKEN
-// ==========================================
-app.post('/api/confirmar-cuenta', async (req, res) => {
-    try {
-        const { correo, codigo } = req.body;
-        const usuario = await Usuario.findOne({ correo: correo.toLowerCase().trim() });
-        if (!usuario) return res.status(404).json({ error: "Usuario no encontrado." });
-        if (usuario.tokenVerificacion !== codigo.trim())
-            return res.status(400).json({ error: "El código de verificación es incorrecto." });
-            
-        usuario.cuentaConfirmada = true;
-        usuario.tokenVerificacion = null;
-        await usuario.save();
-        res.json({ ok: true, mensaje: "¡Cuenta verificada con éxito!" });
+        // Envío seguro y verificado
+        try {
+            const info = await transportador.sendMail({
+                from: '"REBOOP" <' + process.env.EMAIL_USER + '>',
+                to: correoLimpio,
+                subject: '🔑 Código de confirmación - REBOOP',
+                html: `<div style="font-family:sans-serif;background:#1a2333;color:white;padding:30px;border-radius:10px;border-top:5px solid #2ecc71;">
+                        <h1 style="color:#2ecc71;text-align:center;">REBOOP</h1>
+                        <p>¡Hola <strong>${nombre}</strong>! Tu código de verificación obligatorio es:</p>
+                        <div style="background:#0f141c;text-align:center;padding:15px;margin:20px 0;border-radius:6px;">
+                            <span style="font-size:2.5rem;font-weight:bold;letter-spacing:5px;color:#f1c40f;">${codigo}</span>
+                        </div></div>`
+            });
+            console.log("✅ Correo enviado con éxito:", info.messageId);
+            res.json({ mensaje: "Usuario registrado. Código enviado.", correo: correoLimpio });
+        } catch (err) {
+            console.error("❌ ERROR CRÍTICO EN NODEMAILER:", err);
+            await Usuario.deleteOne({ correo: correoLimpio });
+            res.status(500).json({ error: "Error al enviar el código de verificación." });
+        }
     } catch (err) {
-        res.status(500).json({ error: "Error al procesar la confirmación." });
+        console.error(err);
+        res.status(500).json({ error: "Error interno en el proceso de registro." });
     }
 });
 
+// ==========================================
+// 👤 API: EDITAR PERFIL (DATOS EDITABLES)
+// ==========================================
+app.post('/api/editar-perfil', async (req, res) => {
+    try {
+        const { correo, nombre, apellido, telefono, ciudad, presentacion } = req.body;
+        
+        const usuarioActualizado = await Usuario.findOneAndUpdate(
+            { correo: correo.toLowerCase().trim() }, 
+            { 
+                $set: { 
+                    nombre: nombre.trim(), 
+                    apellido: apellido.trim(), 
+                    teléfono: telefono.trim(), 
+                    ciudad: ciudad.trim(), 
+                    presentacion: presentacion.trim() 
+                } 
+            },
+            { new: true }
+        );
+
+        if (!usuarioActualizado) return res.status(404).json({ error: "Usuario no encontrado." });
+
+        res.json({ 
+            mensaje: "Perfil actualizado.", 
+            nombre: usuarioActualizado.nombre, 
+            apellido: usuarioActualizado.apellido, 
+            telefono: usuarioActualizado.teléfono, 
+            ciudad: usuarioActualizado.ciudad, 
+            presentacion: usuarioActualizado.presentacion 
+        });
+    } catch (err) {
+        console.error("❌ Error al editar perfil:", err);
+        res.status(500).json({ error: "Error al actualizar los datos en Atlas." });
+    }
+});
 // ==========================================
 // 👤 API: EDITAR PERFIL (DATOS EDITABLES)
 // ==========================================
