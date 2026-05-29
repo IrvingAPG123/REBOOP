@@ -173,12 +173,10 @@ try {
 // ✉️ NODEMAILER (CONFIGURACIÓN DE GMAIL)
 // ==========================================
 const transportador = nodemailer.createTransport({
-    service: 'gmail',
-    // AGREGA ESTA LÍNEA:
-    socketTimeout: 10000, 
-    connectionTimeout: 10000,
-    // Obliga a usar IPv4:
-    family: 4, 
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4, // ESTO ELIMINA EL ERROR ESOCKET
     auth: { 
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS 
