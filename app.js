@@ -100,18 +100,14 @@ const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    family: 4,
+    family: 4, // <--- ESTO FUERZA IPV4 Y QUITA EL ERROR ESOCKET
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    }
+    },
+    connectionTimeout: 10000,
+    socketTimeout: 10000
 });
- 
-transportador.verify((error) => {
-    if (error) console.error("❌ Error SMTP Nodemailer:", error.message);
-    else console.log("✅ Nodemailer listo para enviar correos.");
-});
- 
 // ==========================================
 // MONGODB ATLAS
 // ==========================================
