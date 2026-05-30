@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const fs = require('fs');
+const mercadopago = require('mercadopago');
  
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,19 +54,47 @@ const uploadProducto = multer({
 });
  
 // ==========================================
-// MERCADO PAGO — USANDO VARIABLE DE ENTORNO
+// MERCADO PAGO — COMPATIBLE CON CUALQUIER VERSION SDK
 // ==========================================
-const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
+let preferenceClient;
+let paymentClient;
  
-const mpClient = new MercadoPagoConfig({
-    accessToken: process.env.MP_ACCESS_TOKEN
-});
-const preferenceClient = new Preference(mpClient);
-const paymentClient    = new Payment(mpClient);
-console.log("💳 Mercado Pago inicializado correctamente.");
+try {
+    // Intentar SDK v2 moderno (mercadopago >= 2.x)
+    if (mercadopago.MercadoPagoConfig) {
+        const { MercadoPagoConfig, Preference, Payment } = mercadopago;
+        const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+        preferenceClient = new Preference(mpClient);
+        paymentClient    = new Payment(mpClient);
+        console.log("💳 Mercado Pago SDK v2 (moderno) inicializado.");
+    }
+    // Fallback SDK v1 clásico (mercadopago < 2.x)
+    else if (typeof mercadopago.configure === 'function') {
+        mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
+        preferenceClient = {
+            create: async (payload) => {
+                const body = payload.body || payload;
+                return await mercadopago.preferences.create(body);
+            }
+        };
+        paymentClient = {
+            get: async ({ id }) => {
+                return await mercadopago.payment.findById(id);
+            }
+        };
+        console.log("💳 Mercado Pago SDK v1 (clásico) inicializado.");
+    } else {
+        throw new Error("SDK de Mercado Pago no reconocido.");
+    }
+} catch (e) {
+    console.error("❌ Error inicializando Mercado Pago:", e.message);
+    // Crear clientes dummy para que el servidor no crashee
+    preferenceClient = { create: async () => { throw new Error("MP no configurado"); } };
+    paymentClient    = { get:    async () => { throw new Error("MP no configurado"); } };
+}
  
 // ==========================================
-// NODEMAILER — USANDO VARIABLES DE ENTORNO
+// NODEMAILER
 // ==========================================
 const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -78,21 +107,17 @@ const transportador = nodemailer.createTransport({
     }
 });
  
-// Verificar conexión SMTP al arrancar
-transportador.verify((error, success) => {
-    if (error) {
-        console.error("❌ Error de conexión SMTP:", error.message);
-    } else {
-        console.log("✅ Nodemailer listo para enviar correos.");
-    }
+transportador.verify((error) => {
+    if (error) console.error("❌ Error SMTP Nodemailer:", error.message);
+    else console.log("✅ Nodemailer listo para enviar correos.");
 });
  
 // ==========================================
-// MONGODB ATLAS — USANDO VARIABLE DE ENTORNO
+// MONGODB ATLAS
 // ==========================================
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("🍃 Conectado con éxito a MONGODB ATLAS ☁️"))
-    .catch(err => console.error("❌ Error de conexión a MongoDB Atlas:", err));
+    .catch(err => console.error("❌ Error MongoDB Atlas:", err));
  
 // ==========================================
 // SCHEMAS & MODELOS
@@ -127,21 +152,11 @@ const ProductoSchema = new mongoose.Schema({
     descripcion: String,
     precio: Number,
     ubicacion: String,
-    marca: String,
-    modelo: String,
-    ram: String,
-    procesador: String,
-    almacenamiento: String,
-    sistemaOperativo: String,
-    pantalla: String,
-    velocidad: String,
-    puertos: String,
-    capacidad: String,
-    conectividad: String,
-    contieneBateria: String,
-    materialPredominante: String,
-    riesgoAmbiental: String,
-    pesoAproximado: String,
+    marca: String, modelo: String, ram: String, procesador: String,
+    almacenamiento: String, sistemaOperativo: String, pantalla: String,
+    velocidad: String, puertos: String, capacidad: String, conectividad: String,
+    contieneBateria: String, materialPredominante: String,
+    riesgoAmbiental: String, pesoAproximado: String,
     imagenes: [String],
     likes: [String],
     guardadoPor: [String],
@@ -245,7 +260,7 @@ app.post('/api/registro', async (req, res) => {
         if (existe) return res.status(400).json({ error: "El correo ya está registrado." });
  
         const codigo = Math.floor(10000 + Math.random() * 90000).toString();
-        const CORREO_ADMIN = process.env.EMAIL_USER;
+        const CORREO_ADMIN = (process.env.EMAIL_USER || '').toLowerCase();
  
         const nuevoUsuario = new Usuario({
             nombre: nombre.trim(),
@@ -256,7 +271,7 @@ app.post('/api/registro', async (req, res) => {
             ciudad: ciudad.trim(),
             correo: correoLimpio,
             contraseña: password.trim(),
-            rol: correoLimpio === CORREO_ADMIN.toLowerCase() ? 'administrador' : 'usuario',
+            rol: correoLimpio === CORREO_ADMIN ? 'administrador' : 'usuario',
             cuentaConfirmada: false,
             tokenVerificacion: codigo,
             membresia: false,
@@ -278,11 +293,11 @@ app.post('/api/registro', async (req, res) => {
                     <p style="color:#b2bec3;">Ecosistema de Reciclaje Tecnológico — Región Norte de Veracruz</p>
                     <hr style="border-color:#2c3e50;">
                     <p style="margin-top:20px;">¡Hola <strong style="color:#fff;">${nombre}</strong>! Gracias por registrarte.</p>
-                    <p style="color:#b2bec3;">Tu código de verificación es:</p>
+                    <p style="color:#b2bec3;">Tu código de verificación de 5 dígitos es:</p>
                     <div style="background:#0f141c;text-align:center;padding:20px;margin:20px 0;border-radius:8px;border:1px solid #2ecc71;">
                         <span style="font-size:2.8rem;font-weight:bold;letter-spacing:10px;color:#f1c40f;">${codigo}</span>
                     </div>
-                    <p style="color:#7f8c8d;font-size:0.85rem;">Este código expira en 15 minutos. Si no solicitaste este registro, ignora este mensaje.</p>
+                    <p style="color:#7f8c8d;font-size:0.85rem;">Ingresa este código en la pantalla de verificación para activar tu cuenta. Si no solicitaste este registro, ignora este mensaje.</p>
                 </div>`
             });
             console.log("✅ Correo de verificación enviado:", info.messageId, "→", correoLimpio);
@@ -290,7 +305,7 @@ app.post('/api/registro', async (req, res) => {
         } catch (emailErr) {
             console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: "No se pudo enviar el código de verificación. Verifica que el correo sea válido e intenta de nuevo." });
+            res.status(500).json({ error: "No se pudo enviar el código de verificación. Verifica que el correo sea válido." });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -299,7 +314,7 @@ app.post('/api/registro', async (req, res) => {
 });
  
 // ==========================================
-// API: CONFIRMAR CUENTA
+// API: CONFIRMAR CUENTA (CÓDIGO DE 5 DÍGITOS)
 // ==========================================
 app.post('/api/confirmar-cuenta', async (req, res) => {
     try {
@@ -308,14 +323,15 @@ app.post('/api/confirmar-cuenta', async (req, res) => {
         const u = await Usuario.findOne({ correo: correoLimpio });
  
         if (!u) return res.status(404).json({ error: "Correo no encontrado." });
-        if (u.cuentaConfirmada) return res.json({ mensaje: "La cuenta ya estaba confirmada." });
+        if (u.cuentaConfirmada) return res.json({ mensaje: "La cuenta ya estaba confirmada. Puedes iniciar sesión." });
         if (u.tokenVerificacion !== codigo.trim())
-            return res.status(400).json({ error: "Código incorrecto. Verifica e intenta de nuevo." });
+            return res.status(400).json({ error: "Código incorrecto. Verifica los 5 dígitos e intenta de nuevo." });
  
         await Usuario.updateOne({ _id: u._id }, {
             $set: { cuentaConfirmada: true, tokenVerificacion: null }
         });
  
+        console.log("✅ Cuenta confirmada:", correoLimpio);
         res.json({ mensaje: "¡Cuenta confirmada con éxito! Ya puedes iniciar sesión." });
     } catch (err) {
         console.error("❌ Error confirmar cuenta:", err);
@@ -329,9 +345,7 @@ app.post('/api/confirmar-cuenta', async (req, res) => {
 app.post('/api/editar-perfil', async (req, res) => {
     try {
         const { correo, nombre, apellido, telefono, ciudad, presentacion } = req.body;
-        const correoLimpio = correo.toLowerCase().trim();
- 
-        const u = await Usuario.findOne({ correo: correoLimpio });
+        const u = await Usuario.findOne({ correo: correo.toLowerCase().trim() });
         if (!u) return res.status(404).json({ error: "Usuario no encontrado." });
  
         await Usuario.updateOne({ _id: u._id }, {
@@ -354,7 +368,6 @@ app.post('/api/editar-perfil', async (req, res) => {
             presentacion: presentacion.trim()
         });
     } catch (err) {
-        console.error("❌ Error editar perfil:", err);
         res.status(500).json({ error: "Error al actualizar los datos." });
     }
 });
@@ -383,7 +396,7 @@ app.post('/api/subir-foto', uploadPerfil.single('foto'), async (req, res) => {
 });
  
 // ==========================================
-// API: FEED UNIFICADO (INICIO)
+// API: FEED UNIFICADO (INICIO - SOLO ACTIVOS)
 // ==========================================
 app.get('/api/inicio-feed', async (req, res) => {
     try {
@@ -400,10 +413,10 @@ app.get('/api/inicio-feed', async (req, res) => {
         const productos = await Producto.find(queryProd).lean();
         const servicios = await Servicio.find(queryServ).lean();
  
-        const productosMapeados = productos.map(p => ({ ...p, tipoElemento: 'producto' }));
-        const serviciosMapeados = servicios.map(s => ({ ...s, tipoElemento: 'servicio' }));
- 
-        let feedCompleto = [...productosMapeados, ...serviciosMapeados];
+        let feedCompleto = [
+            ...productos.map(p => ({ ...p, tipoElemento: 'producto' })),
+            ...servicios.map(s => ({ ...s, tipoElemento: 'servicio' }))
+        ];
  
         if (orden === 'baratos') feedCompleto.sort((a, b) => (a.precio || a.tarifa || 0) - (b.precio || b.tarifa || 0));
         else if (orden === 'pasadas') feedCompleto.sort((a, b) => new Date(a.fechaPublicacion) - new Date(b.fechaPublicacion));
@@ -415,7 +428,9 @@ app.get('/api/inicio-feed', async (req, res) => {
     }
 });
  
-// Feed para mis publicaciones (incluye inactivas del propio usuario)
+// ==========================================
+// API: MIS PUBLICACIONES (INCLUYE INACTIVAS)
+// ==========================================
 app.get('/api/mis-publicaciones', async (req, res) => {
     try {
         const { correo } = req.query;
@@ -425,12 +440,10 @@ app.get('/api/mis-publicaciones', async (req, res) => {
         const productos = await Producto.find({ correoVendedor: correoLimpio }).lean();
         const servicios = await Servicio.find({ correoProveedor: correoLimpio }).lean();
  
-        const productosMapeados = productos.map(p => ({ ...p, tipoElemento: 'producto' }));
-        const serviciosMapeados = servicios.map(s => ({ ...s, tipoElemento: 'servicio' }));
- 
-        const todo = [...productosMapeados, ...serviciosMapeados].sort(
-            (a, b) => new Date(b.fechaPublicacion) - new Date(a.fechaPublicacion)
-        );
+        const todo = [
+            ...productos.map(p => ({ ...p, tipoElemento: 'producto' })),
+            ...servicios.map(s => ({ ...s, tipoElemento: 'servicio' }))
+        ].sort((a, b) => new Date(b.fechaPublicacion) - new Date(a.fechaPublicacion));
  
         res.json(todo);
     } catch (err) {
@@ -452,37 +465,24 @@ app.post('/api/publicar-producto', uploadProducto.array('imagenes', 6), async (r
  
         const imagenes = req.files.map(f => `/uploads/productos/${f.filename}`);
  
-        const producto = new Producto({
+        await new Producto({
             correoVendedor: correo.toLowerCase().trim(),
             nombreVendedor: `${(usuario.nombre || '').trim()} ${(usuario.apellido || '').trim()}`.trim(),
             fotoPerfilVendedor: usuario.fotoPerfil || '',
-            titulo: req.body.titulo,
-            categoria: req.body.categoria,
-            subcategoria: req.body.subcategoria,
-            estado: req.body.estado,
-            aprovechamiento: req.body.aprovechamiento,
-            descripcion: req.body.descripcion,
-            precio: parseFloat(req.body.precio) || 0,
-            ubicacion: req.body.ubicacion,
-            marca: req.body.marca || '',
-            modelo: req.body.modelo || '',
-            ram: req.body.ram || '',
-            procesador: req.body.procesador || '',
-            almacenamiento: req.body.almacenamiento || '',
-            sistemaOperativo: req.body.sistemaOperativo || '',
-            pantalla: req.body.pantalla || '',
-            velocidad: req.body.velocidad || '',
-            puertos: req.body.puertos || '',
-            capacidad: req.body.capacidad || '',
-            conectividad: req.body.conectividad || '',
-            contieneBateria: req.body.contieneBateria || '',
+            titulo: req.body.titulo, categoria: req.body.categoria, subcategoria: req.body.subcategoria,
+            estado: req.body.estado, aprovechamiento: req.body.aprovechamiento,
+            descripcion: req.body.descripcion, precio: parseFloat(req.body.precio) || 0,
+            ubicacion: req.body.ubicacion, marca: req.body.marca || '', modelo: req.body.modelo || '',
+            ram: req.body.ram || '', procesador: req.body.procesador || '',
+            almacenamiento: req.body.almacenamiento || '', sistemaOperativo: req.body.sistemaOperativo || '',
+            pantalla: req.body.pantalla || '', velocidad: req.body.velocidad || '',
+            puertos: req.body.puertos || '', capacidad: req.body.capacidad || '',
+            conectividad: req.body.conectividad || '', contieneBateria: req.body.contieneBateria || '',
             materialPredominante: req.body.materialPredominante || '',
             riesgoAmbiental: req.body.riesgoAmbiental || 'Bajo',
-            pesoAproximado: req.body.pesoAproximado || '',
-            imagenes
-        });
+            pesoAproximado: req.body.pesoAproximado || '', imagenes
+        }).save();
  
-        await producto.save();
         res.json({ ok: true, mensaje: "¡Producto publicado con éxito en REBOOP!" });
     } catch (err) {
         console.error("❌ Error publicar producto:", err);
@@ -546,11 +546,11 @@ app.post('/api/crear-pago', async (req, res) => {
             }
         });
  
-        const url = response.init_point || response.sandbox_init_point;
-        console.log("💳 Preferencia creada para:", correo, "→", url);
+        const url = response.init_point || response.sandbox_init_point || response.body?.init_point;
+        console.log("💳 Preferencia MP creada para:", correo, "→", url);
         res.json({ url });
     } catch (err) {
-        console.error("❌ Error Mercado Pago:", err);
+        console.error("❌ Error Mercado Pago crear-pago:", err);
         res.status(500).json({ error: "Error al generar el enlace de pago." });
     }
 });
@@ -561,12 +561,13 @@ app.post('/api/crear-pago', async (req, res) => {
 app.post('/api/webhook-pago', async (req, res) => {
     try {
         const { type, data } = req.body;
-        console.log("📬 Webhook recibido:", type, data);
+        console.log("📬 Webhook MP recibido:", type, data);
  
         if (type === 'payment' && data?.id) {
             const pagoInfo = await paymentClient.get({ id: data.id });
-            const status   = pagoInfo.status;
-            const correoU  = pagoInfo.metadata?.correo_usuario;
+            const status   = pagoInfo.status || pagoInfo.body?.status;
+            const metadata = pagoInfo.metadata || pagoInfo.body?.metadata;
+            const correoU  = metadata?.correo_usuario;
  
             console.log("💰 Pago status:", status, "| Correo:", correoU);
  
@@ -625,7 +626,7 @@ app.post('/api/verificar-membresia', async (req, res) => {
 });
  
 // ==========================================
-// API: OCULTAR / MOSTRAR PUBLICACIÓN
+// API: TOGGLE VISIBILIDAD
 // ==========================================
 app.post('/api/toggle-visibilidad', async (req, res) => {
     try {
@@ -713,7 +714,7 @@ app.post('/api/eliminar-servicio', async (req, res) => {
 });
  
 // ==========================================
-// API: INTERACCIONES (LIKE Y GUARDAR)
+// API: INTERACCIONES (LIKE / GUARDAR)
 // ==========================================
 app.post('/api/interaccion', async (req, res) => {
     try {
@@ -765,13 +766,9 @@ app.post('/api/admin/toggle-membresia', async (req, res) => {
 app.post('/api/admin/editar-general', async (req, res) => {
     try {
         const { id, tipo, campo1, campo2, campo3 } = req.body;
-        if (tipo === 'usuario') {
-            await Usuario.findByIdAndUpdate(id, { nombre: campo1, apellido: campo2, ciudad: campo3 });
-        } else if (tipo === 'producto') {
-            await Producto.findByIdAndUpdate(id, { titulo: campo1, categoria: campo2, descripcion: campo3 });
-        } else if (tipo === 'servicio') {
-            await Servicio.findByIdAndUpdate(id, { nombreServicio: campo1, categoriaServicio: campo2, descripcion: campo3 });
-        }
+        if (tipo === 'usuario') await Usuario.findByIdAndUpdate(id, { nombre: campo1, apellido: campo2, ciudad: campo3 });
+        else if (tipo === 'producto') await Producto.findByIdAndUpdate(id, { titulo: campo1, categoria: campo2, descripcion: campo3 });
+        else if (tipo === 'servicio') await Servicio.findByIdAndUpdate(id, { nombreServicio: campo1, categoriaServicio: campo2, descripcion: campo3 });
         res.json({ ok: true });
     } catch (err) {
         res.status(500).json({ error: "Error al editar." });
@@ -821,11 +818,13 @@ app.get('/api/reporte/usuarios', async (req, res) => {
     doc.pipe(res);
     doc.fontSize(20).text('REPORTE DE USUARIOS REBOOP').moveDown();
     usuarios.forEach((u, i) => {
-        doc.fontSize(11).text(`${i+1}. ${u.nombre} ${u.apellido}`);
-        doc.text(`Correo: ${u.correo}`);
-        doc.text(`Ciudad: ${u.ciudad}`);
-        doc.text(`Rol: ${u.rol}`);
-        doc.text(`Membresía: ${u.membresia ? 'Premium' : 'Normal'}`).moveDown();
+        doc.fontSize(11)
+           .text(`${i+1}. ${u.nombre} ${u.apellido}`)
+           .text(`Correo: ${u.correo}`)
+           .text(`Ciudad: ${u.ciudad}`)
+           .text(`Rol: ${u.rol}`)
+           .text(`Membresía: ${u.membresia ? 'Premium' : 'Normal'}`)
+           .moveDown();
     });
     doc.end();
 });
@@ -837,10 +836,12 @@ app.get('/api/reporte/productos', async (req, res) => {
     doc.pipe(res);
     doc.fontSize(20).text('REPORTE DE PRODUCTOS REBOOP').moveDown();
     productos.forEach((p, i) => {
-        doc.fontSize(11).text(`${i+1}. ${p.titulo}`);
-        doc.text(`Precio: $${p.precio}`);
-        doc.text(`Estado: ${p.estado}`);
-        doc.text(`Vendedor: ${p.nombreVendedor}`).moveDown();
+        doc.fontSize(11)
+           .text(`${i+1}. ${p.titulo}`)
+           .text(`Precio: $${p.precio}`)
+           .text(`Estado: ${p.estado}`)
+           .text(`Vendedor: ${p.nombreVendedor}`)
+           .moveDown();
     });
     doc.end();
 });
@@ -852,9 +853,11 @@ app.get('/api/reporte/servicios', async (req, res) => {
     doc.pipe(res);
     doc.fontSize(20).text('REPORTE DE SERVICIOS REBOOP').moveDown();
     servicios.forEach((s, i) => {
-        doc.fontSize(11).text(`${i+1}. ${s.nombreServicio}`);
-        doc.text(`Tarifa: $${s.tarifa}`);
-        doc.text(`Proveedor: ${s.nombreProveedor}`).moveDown();
+        doc.fontSize(11)
+           .text(`${i+1}. ${s.nombreServicio}`)
+           .text(`Tarifa: $${s.tarifa}`)
+           .text(`Proveedor: ${s.nombreProveedor}`)
+           .moveDown();
     });
     doc.end();
 });
@@ -867,11 +870,12 @@ app.post('/api/enviar-reportes', async (req, res) => {
             from: `"REBOOP Admin" <${process.env.EMAIL_USER}>`,
             to: correo,
             subject: 'Reporte Administrativo REBOOP',
-            html: `<h2>Reportes REBOOP</h2><p>Descarga los reportes desde los siguientes enlaces:</p>
+            html: `<h2 style="color:#2ecc71;">Reportes REBOOP</h2>
+                   <p>Descarga los reportes desde los siguientes enlaces:</p>
                    <ul>
-                     <li><a href="${urlBase}/api/reporte/usuarios">Reporte de Usuarios</a></li>
-                     <li><a href="${urlBase}/api/reporte/productos">Reporte de Productos</a></li>
-                     <li><a href="${urlBase}/api/reporte/servicios">Reporte de Servicios</a></li>
+                     <li><a href="${urlBase}/api/reporte/usuarios">📊 Reporte de Usuarios</a></li>
+                     <li><a href="${urlBase}/api/reporte/productos">📦 Reporte de Productos</a></li>
+                     <li><a href="${urlBase}/api/reporte/servicios">🛠️ Reporte de Servicios</a></li>
                    </ul>`
         });
         res.json({ ok: true });
@@ -884,6 +888,6 @@ app.post('/api/enviar-reportes', async (req, res) => {
 app.post('/api/localizar-municipio', (req, res) => res.json({ ubicacion: "Poza Rica de Hidalgo, Veracruz" }));
  
 // ==========================================
-// ARRANQUE
+// ARRANQUE DEL SERVIDOR
 // ==========================================
 app.listen(PORT, () => console.log(`🚀 REBOOP encendido en http://localhost:${PORT}`));
