@@ -39,7 +39,6 @@
     </div>
 
     <div class="login-container" style="position: relative;">
-        
         <a href="/login" class="btn-regresar" title="Volver al Login">
             <span class="material-icons">arrow_back</span>
         </a>
@@ -94,7 +93,6 @@
                     inputs[index + 1].focus();
                 }
             });
-
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
                     inputs[index - 1].focus();
@@ -118,9 +116,7 @@
                 if (respuesta.ok) {
                     mostrarAlerta("¡Cuenta confirmada con éxito!", "exito");
                     localStorage.removeItem('correo_verificacion');
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 2000);
+                    setTimeout(() => { window.location.href = '/login'; }, 2000);
                 } else {
                     mostrarAlerta(resultado.error, "error");
                 }
