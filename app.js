@@ -67,8 +67,22 @@ try {
         preferenceClient = new Preference(mpClient);
         paymentClient    = new Payment(mpClient);
         console.log("💳 Mercado Pago SDK v2 (Producción) inicializado correctamente.");
+    } else if (typeof mercadopago.configure === 'function') {
+        mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
+        preferenceClient = {
+            create: async (payload) => {
+                const body = payload.body || payload;
+                return await mercadopago.preferences.create(body);
+            }
+        };
+        paymentClient = {
+            get: async ({ id }) => {
+                return await mercadopago.payment.findById(id);
+            }
+        };
+        console.log("💳 Mercado Pago SDK v1 (clásico) inicializado.");
     } else {
-        throw new Error("Estructura de SDK v2 no disponible.");
+        throw new Error("SDK de Mercado Pago no reconocido.");
     }
 } catch (e) {
     console.error("❌ Error inicializando Mercado Pago:", e.message);
@@ -77,7 +91,7 @@ try {
 }
  
 // ==========================================
-// NODEMAILER — CORREGIDO CON FORZADO IPV4
+// NODEMAILER — CORREGIDO CON FORZADO IPV4 (QUITA EL ERROR RED)
 // ==========================================
 const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -229,7 +243,7 @@ app.post('/api/login', async (req, res) => {
 });
  
 // ==========================================
-// API: REGISTRO CON CORREO DE VERIFICACIÓN
+// API: REGISTRO CON CORREO DE VERIFICACIÓN (SÍNCRONO)
 // ==========================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -277,15 +291,15 @@ app.post('/api/registro', async (req, res) => {
                     <div style="background:#0f141c;text-align:center;padding:20px;margin:20px 0;border-radius:8px;border:1px solid #2ecc71;">
                         <span style="font-size:2.8rem;font-weight:bold;letter-spacing:10px;color:#f1c40f;">${codigo}</span>
                     </div>
-                    <p style="color:#7f8c8d;font-size:0.85rem;">Ingresa este código en la pantalla de verificación para activar tu cuenta.</p>
+                    <p style="color:#7f8c8d;font-size:0.85rem;">Ingresa este código en la pantalla de verificación para activar tu cuenta. Si no solicitaste este registro, ignora este mensaje.</p>
                 </div>`
             });
-            console.log("✅ Correo enviado con éxito a:", correoLimpio);
+            console.log("✅ Correo de verificación enviado con éxito a:", correoLimpio);
             res.json({ mensaje: "Usuario registrado. Código enviado al correo.", correo: correoLimpio });
         } catch (emailErr) {
             console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: "No se pudo enviar el código de verificación. Revisa la configuración de red." });
+            res.status(500).json({ error: "No se pudo enviar el código de verificación. Revisa la configuración del servidor." });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -454,7 +468,7 @@ app.post('/api/publicar-producto', uploadProducto.array('imagenes', 6), async (r
             nombreVendedor: `${(usuario.nombre || '').trim()} ${(usuario.apellido || '').trim()}`.trim(),
             fotoPerfilVendedor: usuario.fotoPerfil || '',
             titulo: req.body.titulo, categoria: req.body.categoria, subcategoria: req.body.subcategoria,
-            estado: req.body.estado, aprovechamiento: req.body.aprovechamiento,
+            state: req.body.estado, aprovechamiento: req.body.aprovechamiento,
             descripcion: req.body.descripcion, precio: parseFloat(req.body.precio) || 0,
             ubicacion: req.body.ubicacion, marca: req.body.marca || '', modelo: req.body.modelo || '',
             ram: req.body.ram || '', procesador: req.body.procesador || '',
