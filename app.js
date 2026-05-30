@@ -59,36 +59,27 @@ const uploadProducto = multer({
 // ==========================================
 let preferenceClient;
 let paymentClient;
- 
+
 try {
-    if (mercadopago.MercadoPagoConfig) {
-        const { MercadoPagoConfig, Preference, Payment } = mercadopago;
-        const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+    // Inicialización usando el SDK moderno (v2) de Mercado Pago
+    const { MercadoPagoConfig, Preference, Payment } = mercadopago;
+    
+    if (MercadoPagoConfig) {
+        const mpClient = new MercadoPagoConfig({ 
+            accessToken: process.env.MP_ACCESS_TOKEN 
+        });
+        
         preferenceClient = new Preference(mpClient);
         paymentClient    = new Payment(mpClient);
-        console.log("💳 Mercado Pago SDK v2 (moderno) inicializado.");
-    }
-    else if (typeof mercadopago.configure === 'function') {
-        mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
-        preferenceClient = {
-            create: async (payload) => {
-                const body = payload.body || payload;
-                return await mercadopago.preferences.create(body);
-            }
-        };
-        paymentClient = {
-            get: async ({ id }) => {
-                return await mercadopago.payment.findById(id);
-            }
-        };
-        console.log("💳 Mercado Pago SDK v1 (clásico) inicializado.");
+        console.log("💳 Mercado Pago SDK v2 (Producción) inicializado correctamente.");
     } else {
-        throw new Error("SDK de Mercado Pago no reconocido.");
+        throw new Error("Estructura de SDK v2 no disponible.");
     }
 } catch (e) {
-    console.error("❌ Error inicializando Mercado Pago:", e.message);
-    preferenceClient = { create: async () => { throw new Error("MP no configurado"); } };
-    paymentClient    = { get:    async () => { throw new Error("MP no configurado"); } };
+    console.error("❌ Error crítico inicializando Mercado Pago:", e.message);
+    // Dummy fallback para evitar caídas
+    preferenceClient = { create: async () => { throw new Error("Mercado Pago no está configurado en el servidor."); } };
+    paymentClient    = { get:    async () => { throw new Error("Mercado Pago no está configurado en el servidor."); } };
 }
  
 // ==========================================
