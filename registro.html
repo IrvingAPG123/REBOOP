@@ -153,32 +153,28 @@
                 password: password
             };
 
-            try {
-                const respuesta = await fetch('/api/registro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosUsuario)
-                });
-                const resultado = await respuesta.json();
+           try {
+        const respuesta = await fetch('/api/registro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosUsuario)
+        });
+        
+        const resultado = await respuesta.json();
 
-                if (respuesta.ok) {
-                    mostrarAlerta("¡Registro exitoso! Enviando código de verificación...", "exito");
-                    
-                    // 🔒 PASO DE MEMORIA CLAVE: Guardamos el correo para que confirmar.html sepa a quién activar
-                    localStorage.setItem('correo_verificacion', correo);
-                    
-                    formRegistro.reset();
-                    
-                    // Redirección directa hacia la pantalla de verificación por token
-                    setTimeout(() => {
-                        window.location.href = '/confirmar.html';
-                    }, 1500);
-                } else {
-                    mostrarAlerta(resultado.error, "error");
-                }
-            } catch (err) {
-                mostrarAlerta("Error al enlazar con el servidor de Atlas.", "error");
-            }
+        if (respuesta.ok) {
+            mostrarAlerta("¡Código enviado! Redirigiendo...", "exito");
+            localStorage.setItem('correo_verificacion', correo);
+            setTimeout(() => { window.location.href = '/confirmar.html'; }, 1500);
+        } else {
+            // SI EL SERVIDOR RESPONDE CON ERROR (EJ. ERROR DE CORREO), MOSTRARÁ EL MENSAJE AQUÍ
+            mostrarAlerta(resultado.error || "Error al registrar", "error");
+        }
+    } catch (err) {
+        // SI HAY UN ERROR DE CONEXIÓN, AQUÍ LO VERÁS
+        console.error("Error técnico:", err);
+        mostrarAlerta("Error de conexión con el servidor. Intenta de nuevo.", "error");
+    }
         });
     </script>
 </body>
