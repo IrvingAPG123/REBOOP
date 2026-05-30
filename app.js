@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const fs = require('fs');
 const mercadopago = require('mercadopago');
+const PDFDocument = require('pdfkit');
  
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,7 +61,6 @@ let preferenceClient;
 let paymentClient;
  
 try {
-    // Intentar SDK v2 moderno (mercadopago >= 2.x)
     if (mercadopago.MercadoPagoConfig) {
         const { MercadoPagoConfig, Preference, Payment } = mercadopago;
         const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
@@ -68,7 +68,6 @@ try {
         paymentClient    = new Payment(mpClient);
         console.log("💳 Mercado Pago SDK v2 (moderno) inicializado.");
     }
-    // Fallback SDK v1 clásico (mercadopago < 2.x)
     else if (typeof mercadopago.configure === 'function') {
         mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
         preferenceClient = {
@@ -88,19 +87,18 @@ try {
     }
 } catch (e) {
     console.error("❌ Error inicializando Mercado Pago:", e.message);
-    // Crear clientes dummy para que el servidor no crashee
     preferenceClient = { create: async () => { throw new Error("MP no configurado"); } };
     paymentClient    = { get:    async () => { throw new Error("MP no configurado"); } };
 }
  
 // ==========================================
-// NODEMAILER
+// NODEMAILER — CORREGIDO CON FORZADO IPV4
 // ==========================================
 const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    family: 4, // <--- ESTO FUERZA IPV4 Y QUITA EL ERROR ESOCKET
+    family: 4, // <--- OBLIGA A USAR IPV4 Y RESUELVE EL ERROR ENETUNREACH/ESOCKET EN RENDER
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -108,6 +106,7 @@ const transportador = nodemailer.createTransport({
     connectionTimeout: 10000,
     socketTimeout: 10000
 });
+ 
 // ==========================================
 // MONGODB ATLAS
 // ==========================================
@@ -186,8 +185,8 @@ const Servicio = mongoose.model('Servicio', ServicioSchema, 'servicios');
 // ==========================================
 // VISTAS HTML
 // ==========================================
-app.get('/',                   (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
-app.get('/login',              (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/',                    (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/login',               (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/registro.html',      (req, res) => res.sendFile(path.join(__dirname, 'registro.html')));
 app.get('/confirmar.html',     (req, res) => res.sendFile(path.join(__dirname, 'confirmar.html')));
 app.get('/panel_admin.html',   (req, res) => res.sendFile(path.join(__dirname, 'panel_admin.html')));
@@ -245,7 +244,7 @@ app.post('/api/login', async (req, res) => {
 });
  
 // ==========================================
-// API: REGISTRO CON CORREO DE VERIFICACIÓN
+// API: REGISTRO CON CORREO DE VERIFICACIÓN (SÍNCRONO)
 // ==========================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -301,7 +300,7 @@ app.post('/api/registro', async (req, res) => {
         } catch (emailErr) {
             console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: "No se pudo enviar el código de verificación. Verifica que el correo sea válido." });
+            res.status(500).json({ error: "No se pudo enviar el código de verificación al servidor de Google. Intenta de nuevo." });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -336,34 +335,39 @@ app.post('/api/confirmar-cuenta', async (req, res) => {
 });
  
 // ==========================================
-// API: EDITAR PERFIL
+// API: EDITAR PERFIL (OPTIMIZADO CON FINDONEANDUPDATE)
 // ==========================================
 app.post('/api/editar-perfil', async (req, res) => {
     try {
         const { correo, nombre, apellido, telefono, ciudad, presentacion } = req.body;
-        const u = await Usuario.findOne({ correo: correo.toLowerCase().trim() });
-        if (!u) return res.status(404).json({ error: "Usuario no encontrado." });
+        
+        const usuarioActualizado = await Usuario.findOneAndUpdate(
+            { correo: correo.toLowerCase().trim() },
+            {
+                $set: {
+                    nombre: nombre.trim(),
+                    apellido: apellido.trim(),
+                    teléfono: telefono.trim(),
+                    telefono: telefono.trim(),
+                    ciudad: ciudad.trim(),
+                    presentacion: presentacion.trim()
+                }
+            },
+            { new: true }
+        );
  
-        await Usuario.updateOne({ _id: u._id }, {
-            $set: {
-                nombre: nombre.trim(),
-                apellido: apellido.trim(),
-                teléfono: telefono.trim(),
-                telefono: telefono.trim(),
-                ciudad: ciudad.trim(),
-                presentacion: presentacion.trim()
-            }
-        });
+        if (!usuarioActualizado) return res.status(404).json({ error: "Usuario no encontrado." });
  
         res.json({
             mensaje: "Perfil actualizado.",
-            nombre: nombre.trim(),
-            apellido: apellido.trim(),
-            telefono: telefono.trim(),
-            ciudad: ciudad.trim(),
-            presentacion: presentacion.trim()
+            nombre: usuarioActualizado.nombre,
+            apellido: usuarioActualizado.apellido,
+            telefono: usuarioActualizado.telefono,
+            ciudad: usuarioActualizado.ciudad,
+            presentacion: usuarioActualizado.presentacion
         });
     } catch (err) {
+        console.error("❌ Error al actualizar perfil:", err);
         res.status(500).json({ error: "Error al actualizar los datos." });
     }
 });
@@ -804,8 +808,6 @@ app.post('/api/admin/eliminar-servicio-admin', async (req, res) => {
 // ==========================================
 // API: REPORTES PDF
 // ==========================================
-const PDFDocument = require('pdfkit');
- 
 app.get('/api/reporte/usuarios', async (req, res) => {
     const usuarios = await Usuario.find({});
     const doc = new PDFDocument();
