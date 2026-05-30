@@ -23,7 +23,7 @@ if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 if (!fs.existsSync('./uploads/productos')) fs.mkdirSync('./uploads/productos');
  
 // ==========================================
-// MULTER — FOTOS DE PERFIL
+// MULTER — CONFIGURACIONES DE ALMACENAMIENTO
 // ==========================================
 const storagePerfil = multer.diskStorage({
     destination: (req, file, cb) => cb(null, './uploads/'),
@@ -38,9 +38,6 @@ const uploadPerfil = multer({
     }
 });
  
-// ==========================================
-// MULTER — FOTOS DE PRODUCTOS
-// ==========================================
 const storageProducto = multer.diskStorage({
     destination: (req, file, cb) => cb(null, './uploads/productos/'),
     filename: (req, file, cb) => cb(null, `prod_${Date.now()}_${Math.random().toString(36).slice(2)}${path.extname(file.originalname)}`)
@@ -55,7 +52,7 @@ const uploadProducto = multer({
 });
  
 // ==========================================
-// MERCADO PAGO — CONFIGURACIÓN DE PRODUCCIÓN (SDK v2)
+// MERCADO PAGO — SDK v2 PRODUCCIÓN
 // ==========================================
 let preferenceClient;
 let paymentClient;
@@ -91,10 +88,10 @@ try {
 }
  
 // ==========================================
-// NODEMAILER — CON LIMPIEZA AUTOMÁTICA DE ESPACIOS
+// NODEMAILER — CONFIGURACIÓN SANITIZADA ( family: 4 )
 // ==========================================
 const correoRemitente = (process.env.EMAIL_USER || '').trim();
-const contraseniaRemitente = (process.env.EMAIL_PASS || '').replace(/\s+/g, ''); // Sanitiza el token de 16 letras
+const contraseniaRemitente = (process.env.EMAIL_PASS || '').replace(/\s+/g, ''); 
 
 const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -110,7 +107,7 @@ const transportador = nodemailer.createTransport({
 });
  
 // ==========================================
-// MONGODB ATLAS
+// MONGODB ATLAS CONEXIÓN
 // ==========================================
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("🍃 Conectado con éxito a MONGODB ATLAS ☁️"))
@@ -246,7 +243,7 @@ app.post('/api/login', async (req, res) => {
 });
  
 // ==========================================
-// API: REGISTRO CON CORREO DE VERIFICACIÓN (SÍNCRONO)
+// API: REGISTRO CON CORREO DE VERIFICACIÓN
 // ==========================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -302,7 +299,7 @@ app.post('/api/registro', async (req, res) => {
         } catch (emailErr) {
             console.error("❌ ERROR COMPLETO DE NODEMAILER:", emailErr);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: `Fallo de autenticación con Gmail: ${emailErr.message}` });
+            res.status(500).json({ error: `Error enviando el correo de verificación. Detalle: ${emailErr.message}` });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -311,7 +308,7 @@ app.post('/api/registro', async (req, res) => {
 });
  
 // ==========================================
-// API: CONFIRMAR CUENTA (CÓDIGO DE 5 DÍGITOS)
+// API: CONFIRMAR CUENTA
 // ==========================================
 app.post('/api/confirmar-cuenta', async (req, res) => {
     try {
@@ -397,7 +394,7 @@ app.post('/api/subir-foto', uploadPerfil.single('foto'), async (req, res) => {
 });
  
 // ==========================================
-// API: FEED UNIFICADO (INICIO - SOLO ACTIVOS)
+// API: FEED UNIFICADO (INICIO)
 // ==========================================
 app.get('/api/inicio-feed', async (req, res) => {
     try {
@@ -430,7 +427,7 @@ app.get('/api/inicio-feed', async (req, res) => {
 });
  
 // ==========================================
-// API: MIS PUBLICACIONES (INCLUYE INACTIVAS)
+// API: MIS PUBLICACIONES
 // ==========================================
 app.get('/api/mis-publicaciones', async (req, res) => {
     try {
@@ -519,7 +516,7 @@ app.post('/api/publicar-servicio', async (req, res) => {
 });
  
 // ==========================================
-// API: CREAR PAGO — MERCADO PAGO
+// API: ENLACE MERCADO PAGO
 // ==========================================
 app.post('/api/crear-pago', async (req, res) => {
     try {
@@ -619,7 +616,7 @@ app.post('/api/verificar-membresia', async (req, res) => {
 });
  
 // ==========================================
-// API: TOGGLE VISIBILIDAD
+// API: VISIBILIDAD DE PUBLICACIONES
 // ==========================================
 app.post('/api/toggle-visibilidad', async (req, res) => {
     try {
@@ -707,7 +704,7 @@ app.post('/api/eliminar-servicio', async (req, res) => {
 });
  
 // ==========================================
-// API: INTERACCIONES (LIKE / GUARDAR)
+// API: REACCIONES (LIKES)
 // ==========================================
 app.post('/api/interaccion', async (req, res) => {
     try {
@@ -724,7 +721,7 @@ app.post('/api/interaccion', async (req, res) => {
 });
  
 // ==========================================
-// API: ADMINISTRACIÓN
+// API: PANEL DE ADMINISTRACIÓN
 // ==========================================
 app.get('/api/admin/usuarios', async (req, res) => {
     try {
@@ -799,7 +796,7 @@ app.post('/api/admin/eliminar-servicio-admin', async (req, res) => {
 });
  
 // ==========================================
-// API: REPORTES PDF
+// API: REPORTES EN PDF (PDFKIT)
 // ==========================================
 app.get('/api/reporte/usuarios', async (req, res) => {
     const usuarios = await Usuario.find({});
