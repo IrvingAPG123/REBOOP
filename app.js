@@ -91,16 +91,19 @@ try {
 }
  
 // ==========================================
-// NODEMAILER — CORREGIDO CON FORZADO IPV4 (QUITA EL ERROR RED)
+// NODEMAILER — CON LIMPIEZA AUTOMÁTICA DE ESPACIOS
 // ==========================================
+const correoRemitente = (process.env.EMAIL_USER || '').trim();
+const contraseniaRemitente = (process.env.EMAIL_PASS || '').replace(/\s+/g, ''); // Sanitiza el token de 16 letras
+
 const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     family: 4, 
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: correoRemitente,
+        pass: contraseniaRemitente
     },
     connectionTimeout: 10000,
     socketTimeout: 10000
@@ -254,7 +257,7 @@ app.post('/api/registro', async (req, res) => {
         if (existe) return res.status(400).json({ error: "El correo ya está registrado." });
  
         const codigo = Math.floor(10000 + Math.random() * 90000).toString();
-        const CORREO_ADMIN = (process.env.EMAIL_USER || '').toLowerCase();
+        const CORREO_ADMIN = correoRemitente.toLowerCase();
  
         const nuevoUsuario = new Usuario({
             nombre: nombre.trim(),
@@ -278,7 +281,7 @@ app.post('/api/registro', async (req, res) => {
  
         try {
             await transportador.sendMail({
-                from: `"REBOOP" <${process.env.EMAIL_USER}>`,
+                from: `"REBOOP" <${correoRemitente}>`,
                 to: correoLimpio,
                 subject: '🔑 Código de confirmación - REBOOP',
                 html: `
@@ -297,9 +300,9 @@ app.post('/api/registro', async (req, res) => {
             console.log("✅ Correo de verificación enviado con éxito a:", correoLimpio);
             res.json({ mensaje: "Usuario registrado. Código enviado al correo.", correo: correoLimpio });
         } catch (emailErr) {
-            console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
+            console.error("❌ ERROR COMPLETO DE NODEMAILER:", emailErr);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: "No se pudo enviar el código de verificación. Revisa la configuración del servidor." });
+            res.status(500).json({ error: `Fallo de autenticación con Gmail: ${emailErr.message}` });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -855,7 +858,7 @@ app.post('/api/enviar-reportes', async (req, res) => {
         const { correo } = req.body;
         const urlBase = 'https://reboop.onrender.com';
         await transportador.sendMail({
-            from: `"REBOOP Admin" <${process.env.EMAIL_USER}>`,
+            from: `"REBOOP Admin" <${correoRemitente}>`,
             to: correo,
             subject: 'Reporte Administrativo REBOOP',
             html: `<h2 style="color:#2ecc71;">Reportes REBOOP</h2>
