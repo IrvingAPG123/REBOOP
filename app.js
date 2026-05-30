@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 3000;
 // ==========================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname)));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
  
@@ -55,20 +54,15 @@ const uploadProducto = multer({
 });
  
 // ==========================================
-// MERCADO PAGO — COMPATIBLE CON CUALQUIER VERSION SDK
+// MERCADO PAGO — CONFIGURACIÓN DE PRODUCCIÓN
 // ==========================================
 let preferenceClient;
 let paymentClient;
-
+ 
 try {
-    // Inicialización usando el SDK moderno (v2) de Mercado Pago
-    const { MercadoPagoConfig, Preference, Payment } = mercadopago;
-    
-    if (MercadoPagoConfig) {
-        const mpClient = new MercadoPagoConfig({ 
-            accessToken: process.env.MP_ACCESS_TOKEN 
-        });
-        
+    if (mercadopago.MercadoPagoConfig) {
+        const { MercadoPagoConfig, Preference, Payment } = mercadopago;
+        const mpClient = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
         preferenceClient = new Preference(mpClient);
         paymentClient    = new Payment(mpClient);
         console.log("💳 Mercado Pago SDK v2 (Producción) inicializado correctamente.");
@@ -76,10 +70,9 @@ try {
         throw new Error("Estructura de SDK v2 no disponible.");
     }
 } catch (e) {
-    console.error("❌ Error crítico inicializando Mercado Pago:", e.message);
-    // Dummy fallback para evitar caídas
-    preferenceClient = { create: async () => { throw new Error("Mercado Pago no está configurado en el servidor."); } };
-    paymentClient    = { get:    async () => { throw new Error("Mercado Pago no está configurado en el servidor."); } };
+    console.error("❌ Error inicializando Mercado Pago:", e.message);
+    preferenceClient = { create: async () => { throw new Error("MP no configurado"); } };
+    paymentClient    = { get:    async () => { throw new Error("MP no configurado"); } };
 }
  
 // ==========================================
@@ -89,7 +82,7 @@ const transportador = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
-    family: 4, // <--- OBLIGA A USAR IPV4 Y RESUELVE EL ERROR ENETUNREACH/ESOCKET EN RENDER
+    family: 4, 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -178,8 +171,8 @@ const Servicio = mongoose.model('Servicio', ServicioSchema, 'servicios');
 // ==========================================
 app.get('/',                    (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/login',               (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
-app.get('/registro.html',      (req, res) => res.sendFile(path.join(__dirname, 'registro.html')));
-app.get('/confirmar.html',     (req, res) => res.sendFile(path.join(__dirname, 'confirmar.html')));
+app.get('/registro',            (req, res) => res.sendFile(path.join(__dirname, 'registro.html')));
+app.get('/confirmar',           (req, res) => res.sendFile(path.join(__dirname, 'confirmar.html')));
 app.get('/panel_admin.html',   (req, res) => res.sendFile(path.join(__dirname, 'panel_admin.html')));
 app.get('/panel_cliente.html', (req, res) => res.sendFile(path.join(__dirname, 'panel_cliente.html')));
 app.get('/pago-exitoso.html',  (req, res) => res.sendFile(path.join(__dirname, 'pago-exitoso.html')));
@@ -235,7 +228,7 @@ app.post('/api/login', async (req, res) => {
 });
  
 // ==========================================
-// API: REGISTRO CON CORREO DE VERIFICACIÓN (SÍNCRONO)
+// API: REGISTRO CON CORREO DE VERIFICACIÓN
 // ==========================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -269,7 +262,7 @@ app.post('/api/registro', async (req, res) => {
         await nuevoUsuario.save();
  
         try {
-            const info = await transportador.sendMail({
+            await transportador.sendMail({
                 from: `"REBOOP" <${process.env.EMAIL_USER}>`,
                 to: correoLimpio,
                 subject: '🔑 Código de confirmación - REBOOP',
@@ -283,15 +276,15 @@ app.post('/api/registro', async (req, res) => {
                     <div style="background:#0f141c;text-align:center;padding:20px;margin:20px 0;border-radius:8px;border:1px solid #2ecc71;">
                         <span style="font-size:2.8rem;font-weight:bold;letter-spacing:10px;color:#f1c40f;">${codigo}</span>
                     </div>
-                    <p style="color:#7f8c8d;font-size:0.85rem;">Ingresa este código en la pantalla de verificación para activar tu cuenta. Si no solicitaste este registro, ignora este mensaje.</p>
+                    <p style="color:#7f8c8d;font-size:0.85rem;">Ingresa este código en la pantalla de verificación para activar tu cuenta.</p>
                 </div>`
             });
-            console.log("✅ Correo de verificación enviado:", info.messageId, "→", correoLimpio);
-            res.json({ mensaje: "Usuario registrado. Código enviado al correo.", correo: correoLimpio });
+            console.log("✅ Correo enviado con éxito a:", correoLimpio);
+            return res.json({ mensaje: "Usuario registrado de forma correcta. Código enviado.", correo: correoLimpio });
         } catch (emailErr) {
-            console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
+            console.error("❌ ERROR NODEMAILER AL DESPACHAR:", emailErr.message);
             await Usuario.deleteOne({ correo: correoLimpio });
-            res.status(500).json({ error: "No se pudo enviar el código de verificación al servidor de Google. Intenta de nuevo." });
+            return res.status(500).json({ error: "Error en el servidor de correos de Google. Registro cancelado." });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -300,7 +293,7 @@ app.post('/api/registro', async (req, res) => {
 });
  
 // ==========================================
-// API: CONFIRMAR CUENTA (CÓDIGO DE 5 DÍGITOS)
+// API: CONFIRMAR CUENTA
 // ==========================================
 app.post('/api/confirmar-cuenta', async (req, res) => {
     try {
@@ -317,16 +310,14 @@ app.post('/api/confirmar-cuenta', async (req, res) => {
             $set: { cuentaConfirmada: true, tokenVerificacion: null }
         });
  
-        console.log("✅ Cuenta confirmada:", correoLimpio);
         res.json({ mensaje: "¡Cuenta confirmada con éxito! Ya puedes iniciar sesión." });
     } catch (err) {
-        console.error("❌ Error confirmar cuenta:", err);
         res.status(500).json({ error: "Error al validar el código." });
     }
 });
  
 // ==========================================
-// API: EDITAR PERFIL (OPTIMIZADO CON FINDONEANDUPDATE)
+// API: EDITAR PERFIL
 // ==========================================
 app.post('/api/editar-perfil', async (req, res) => {
     try {
@@ -340,7 +331,7 @@ app.post('/api/editar-perfil', async (req, res) => {
                     apellido: apellido.trim(),
                     teléfono: telefono.trim(),
                     telefono: telefono.trim(),
-                    ciudad: ciudad.trim(),
+                    ciudad: city.trim(),
                     presentacion: presentacion.trim()
                 }
             },
@@ -358,7 +349,6 @@ app.post('/api/editar-perfil', async (req, res) => {
             presentacion: usuarioActualizado.presentacion
         });
     } catch (err) {
-        console.error("❌ Error al actualizar perfil:", err);
         res.status(500).json({ error: "Error al actualizar los datos." });
     }
 });
@@ -420,7 +410,7 @@ app.get('/api/inicio-feed', async (req, res) => {
 });
  
 // ==========================================
-// API: MIS PUBLICACIONES (INCLUYE INACTIVAS)
+// API: MIS PUBLICACIONES
 // ==========================================
 app.get('/api/mis-publicaciones', async (req, res) => {
     try {
@@ -476,7 +466,6 @@ app.post('/api/publicar-producto', uploadProducto.array('imagenes', 6), async (r
  
         res.json({ ok: true, mensaje: "¡Producto publicado con éxito en REBOOP!" });
     } catch (err) {
-        console.error("❌ Error publicar producto:", err);
         res.status(500).json({ error: "Error interno al publicar el producto." });
     }
 });
@@ -538,10 +527,8 @@ app.post('/api/crear-pago', async (req, res) => {
         });
  
         const url = response.init_point || response.sandbox_init_point || response.body?.init_point;
-        console.log("💳 Preferencia MP creada para:", correo, "→", url);
         res.json({ url });
     } catch (err) {
-        console.error("❌ Error Mercado Pago crear-pago:", err);
         res.status(500).json({ error: "Error al generar el enlace de pago." });
     }
 });
@@ -552,7 +539,6 @@ app.post('/api/crear-pago', async (req, res) => {
 app.post('/api/webhook-pago', async (req, res) => {
     try {
         const { type, data } = req.body;
-        console.log("📬 Webhook MP recibido:", type, data);
  
         if (type === 'payment' && data?.id) {
             const pagoInfo = await paymentClient.get({ id: data.id });
@@ -560,19 +546,15 @@ app.post('/api/webhook-pago', async (req, res) => {
             const metadata = pagoInfo.metadata || pagoInfo.body?.metadata;
             const correoU  = metadata?.correo_usuario;
  
-            console.log("💰 Pago status:", status, "| Correo:", correoU);
- 
             if (status === 'approved' && correoU) {
                 await Usuario.findOneAndUpdate(
                     { correo: correoU.toLowerCase().trim() },
                     { $set: { membresia: true, fechaMembresia: new Date() } }
                 );
-                console.log("✅ Membresía activada para:", correoU);
             }
         }
         res.sendStatus(200);
     } catch (err) {
-        console.error("❌ Error webhook:", err);
         res.sendStatus(500);
     }
 });
