@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 // ==========================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname)));
 app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
  
@@ -54,7 +55,7 @@ const uploadProducto = multer({
 });
  
 // ==========================================
-// MERCADO PAGO — CONFIGURACIÓN DE PRODUCCIÓN
+// MERCADO PAGO — CONFIGURACIÓN DE PRODUCCIÓN (SDK v2)
 // ==========================================
 let preferenceClient;
 let paymentClient;
@@ -171,8 +172,8 @@ const Servicio = mongoose.model('Servicio', ServicioSchema, 'servicios');
 // ==========================================
 app.get('/',                    (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/login',               (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
-app.get('/registro',            (req, res) => res.sendFile(path.join(__dirname, 'registro.html')));
-app.get('/confirmar',           (req, res) => res.sendFile(path.join(__dirname, 'confirmar.html')));
+app.get('/registro.html',      (req, res) => res.sendFile(path.join(__dirname, 'registro.html')));
+app.get('/confirmar.html',     (req, res) => res.sendFile(path.join(__dirname, 'confirmar.html')));
 app.get('/panel_admin.html',   (req, res) => res.sendFile(path.join(__dirname, 'panel_admin.html')));
 app.get('/panel_cliente.html', (req, res) => res.sendFile(path.join(__dirname, 'panel_cliente.html')));
 app.get('/pago-exitoso.html',  (req, res) => res.sendFile(path.join(__dirname, 'pago-exitoso.html')));
@@ -280,11 +281,11 @@ app.post('/api/registro', async (req, res) => {
                 </div>`
             });
             console.log("✅ Correo enviado con éxito a:", correoLimpio);
-            return res.json({ mensaje: "Usuario registrado de forma correcta. Código enviado.", correo: correoLimpio });
+            res.json({ mensaje: "Usuario registrado. Código enviado al correo.", correo: correoLimpio });
         } catch (emailErr) {
-            console.error("❌ ERROR NODEMAILER AL DESPACHAR:", emailErr.message);
+            console.error("❌ ERROR AL ENVIAR CORREO:", emailErr.message);
             await Usuario.deleteOne({ correo: correoLimpio });
-            return res.status(500).json({ error: "Error en el servidor de correos de Google. Registro cancelado." });
+            res.status(500).json({ error: "No se pudo enviar el código de verificación. Revisa la configuración de red." });
         }
     } catch (err) {
         console.error("❌ Error registro:", err);
@@ -293,7 +294,7 @@ app.post('/api/registro', async (req, res) => {
 });
  
 // ==========================================
-// API: CONFIRMAR CUENTA
+// API: CONFIRMAR CUENTA (CÓDIGO DE 5 DÍGITOS)
 // ==========================================
 app.post('/api/confirmar-cuenta', async (req, res) => {
     try {
@@ -310,8 +311,10 @@ app.post('/api/confirmar-cuenta', async (req, res) => {
             $set: { cuentaConfirmada: true, tokenVerificacion: null }
         });
  
+        console.log("✅ Cuenta confirmada:", correoLimpio);
         res.json({ mensaje: "¡Cuenta confirmada con éxito! Ya puedes iniciar sesión." });
     } catch (err) {
+        console.error("❌ Error confirmar cuenta:", err);
         res.status(500).json({ error: "Error al validar el código." });
     }
 });
@@ -331,7 +334,7 @@ app.post('/api/editar-perfil', async (req, res) => {
                     apellido: apellido.trim(),
                     teléfono: telefono.trim(),
                     telefono: telefono.trim(),
-                    ciudad: city.trim(),
+                    ciudad: ciudad.trim(),
                     presentacion: presentacion.trim()
                 }
             },
@@ -410,7 +413,7 @@ app.get('/api/inicio-feed', async (req, res) => {
 });
  
 // ==========================================
-// API: MIS PUBLICACIONES
+// API: MIS PUBLICACIONES (INCLUYE INACTIVAS)
 // ==========================================
 app.get('/api/mis-publicaciones', async (req, res) => {
     try {
